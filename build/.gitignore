@@ -1,0 +1,11 @@
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+# An some autoconf files
+!compile
+!config.guess
+!config.sub
+!decomp
+!install-sh
+!missing

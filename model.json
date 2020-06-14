@@ -1,0 +1,56 @@
+[
+                {
+                                "false": {
+                                                "false": {
+                                                                "complexity": 0.004999999888241291,
+                                                                "loss": 0.12378757447004318,
+                                                                "name": "recidivate-within-two-years:1",
+                                                                "prediction": 0
+                                                },
+                                                "feature": 3,
+                                                "name": "age:<26",
+                                                "reference": 1,
+                                                "relation": "==",
+                                                "true": {
+                                                                "false": {
+                                                                                "complexity": 0.004999999888241291,
+                                                                                "loss": 0.01751840114593506,
+                                                                                "name": "recidivate-within-two-years:1",
+                                                                                "prediction": 1
+                                                                },
+                                                                "feature": 7,
+                                                                "name": "juvenile-crimes:=0",
+                                                                "reference": 1,
+                                                                "relation": "==",
+                                                                "true": {
+                                                                                "false": {
+                                                                                                "complexity": 0.004999999888241291,
+                                                                                                "loss": 0.06587520241737366,
+                                                                                                "name": "recidivate-within-two-years:1",
+                                                                                                "prediction": 0
+                                                                                },
+                                                                                "feature": 10,
+                                                                                "name": "priors:2-3",
+                                                                                "reference": 1,
+                                                                                "relation": "==",
+                                                                                "true": {
+                                                                                                "complexity": 0.004999999888241291,
+                                                                                                "loss": 0.0172288715839386,
+                                                                                                "name": "recidivate-within-two-years:1",
+                                                                                                "prediction": 1
+                                                                                }
+                                                                }
+                                                }
+                                },
+                                "feature": 11,
+                                "name": "priors:>3",
+                                "reference": 1,
+                                "relation": "==",
+                                "true": {
+                                                "complexity": 0.004999999888241291,
+                                                "loss": 0.10655856132507324,
+                                                "name": "recidivate-within-two-years:1",
+                                                "prediction": 1
+                                }
+                }
+]
