@@ -52,7 +52,7 @@ float Queue::difference(int const index, Bitmask const & instance) const {
     std::vector< float > const & group_identity = std::get<0>(this -> identities[index]);
     float difference = 0;
     for (int i = 0; i < height(); ++i) {
-        difference += std::abs(group_identity[i] - (float) instance[i]) / (float) height();
+        difference += std::fabs((float)(group_identity[i]) - (float) (instance[i])) / (float) height();
     }
     return difference;
 }
