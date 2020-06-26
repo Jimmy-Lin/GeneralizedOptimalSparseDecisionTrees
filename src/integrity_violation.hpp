@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 // Implementation of run time error for displaying any detected integrity violations during the algorithm
 // These exceptions indicate that a logical error in the code has caused the algorithm to reach an incorrect state
