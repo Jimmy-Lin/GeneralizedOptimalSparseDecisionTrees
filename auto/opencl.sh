@@ -5,7 +5,7 @@ if [ "$1" = "--install" ]; then
     if command -v brew > /dev/null; then
         echo "OpenCL is bundled with MacOS distributions and therefore is already installed."
     elif command -v apt-get > /dev/null; then
-        sudo apy-get install ocl-icd-opencl-dev
+        sudo apt-get install ocl-icd-opencl-dev
     else
         echo "Could not detect or recognize system package manager while attempting to install OpenCL."
         echo "Please install OpenCL on this system and try again."

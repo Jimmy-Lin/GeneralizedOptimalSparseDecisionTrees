@@ -1,9 +1,0 @@
-{
-    "regularization": 0.005,
-    "uncertainty_tolerance": 0.0,
-    "time_limit": 1800,
-    "output_limit": 1,
-    "verbose": true,
-    "workers": 1,
-    "output": "model.json"
-}

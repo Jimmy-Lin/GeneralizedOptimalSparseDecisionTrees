@@ -6,8 +6,10 @@ if [ "$1" = "--help" ]; then
     echo "  generates configuration aclocal.m4 and Makefile.in if any are missing"
     echo "$0 --regenerate"
     echo "  generates configuration aclocal.m4 and Makefile.in even if they already exist"
-    echo "$0 --configure [--enable-tests]"
+    echo "$0 --configure [--enable-tests] [--enable-opencl]"
     echo "  runs configuration if Makefile is not found, option to include tests"
+    echo "$0 --reconfigure [--enable-tests] [--enable-opencl]"
+    echo "  force runs configuration, option to include tests"
     echo "$0 --test"
     echo "  build and run the test suite"
     echo "$0 --build"
@@ -44,6 +46,11 @@ elif [ "$1" = "--configure" ]; then
         ./configure $2
         ./$0 --clean
     fi
+elif [ "$1" = "--reconfigure" ]; then
+    ./$0 --generate
+    echo "Executing Dependency Tests"
+    ./configure $2
+    ./$0 --clean
 elif [ "$1" = "--test" ]; then
     ./$0 --configure --enable-tests && make -j4 test
 elif [ "$1" = "--build" ]; then

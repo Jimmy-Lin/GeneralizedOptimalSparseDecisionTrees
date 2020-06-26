@@ -1,20 +1,16 @@
 #include "test.hpp"
 #include "test_bitmask.hpp"
-#include "test_key.hpp"
-#include "test_dataset.hpp"
-#include "test_task.hpp"
-#include "test_graph.hpp"
 #include "test_index.hpp"
+#include "test_queue.hpp"
+#include "test_consistency.hpp"
 
 int main() {
     int failures = 0;
     std::map< std::string, int (*)(void) > units;
     units["Bitmask"] = test_bitmask;
     units["Index"] = test_index;
-    units["Dataset"] = test_dataset;
-    units["Key"] = test_key;
-    units["Task"] = test_task;
-    units["Graph"] = test_graph;
+    units["Queue"] = test_queue;
+    units["Consistency"] = test_consistency;
 
     for (std::map< std::string, int (*)(void) >::iterator iterator = units.begin(); iterator != units.end(); ++iterator ) {
         try {

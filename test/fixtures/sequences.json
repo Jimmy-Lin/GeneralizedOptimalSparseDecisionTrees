@@ -1,0 +1,80 @@
+[
+  {
+    "false": {
+      "false": {
+        "false": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "path",
+            "prediction": "xNullno2zeta5918273645.564738291"
+          },
+          "feature": 3,
+          "name": "enum",
+          "reference": 4,
+          "relation": ">=",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "path",
+            "prediction": "xno4delta3192875.1024875"
+          }
+        },
+        "feature": 2,
+        "name": "bin",
+        "reference": "yes",
+        "relation": "==",
+        "true": {
+          "false": {
+            "false": {
+              "complexity": 0.05000000074505806,
+              "loss": 0.0,
+              "name": "path",
+              "prediction": "xNAyes1epsilon-40"
+            },
+            "feature": 4,
+            "name": "str",
+            "reference": "alpha",
+            "relation": "==",
+            "true": {
+              "complexity": 0.05000000074505806,
+              "loss": 0.0,
+              "name": "path",
+              "prediction": "xnullyes1alpha00.0"
+            }
+          },
+          "feature": 3,
+          "name": "enum",
+          "reference": 2,
+          "relation": ">=",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "path",
+            "prediction": "xNaNyes3eta61121121121211.3"
+          }
+        }
+      },
+      "feature": 1,
+      "name": "optional",
+      "reference": "notnull",
+      "relation": "==",
+      "true": {
+        "complexity": 0.05000000074505806,
+        "loss": 0.0,
+        "name": "path",
+        "prediction": "xnotnullno2beta10.123456789"
+      }
+    },
+    "feature": 1,
+    "name": "optional",
+    "reference": "nontrivial",
+    "relation": "==",
+    "true": {
+      "complexity": 0.05000000074505806,
+      "loss": 0.0,
+      "name": "path",
+      "prediction": "xnullyes3gamma-2-999999.9999999"
+    }
+  }
+]

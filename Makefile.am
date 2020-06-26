@@ -17,10 +17,9 @@ EXTRA_DIST = README.md \
 
 CPP_FLAGS = -I include -msse4.1
 LD_FLAGS = -Wall -I include -pthread
-LD_ADD = -ltbb -ltbbmalloc
+LD_ADD = -ltbb -ltbbmalloc -lgmp
 CL_LD_FLAGS = @CL_CFLAGS@
 CL_ADD = @CL_LIBS@
-
 
 if OSX
 LD_FLAGS += -stdlib=libc++
@@ -37,15 +36,24 @@ gosdt_LDFLAGS = $(LD_FLAGS)
 gosdt_LDADD = $(LD_ADD)
 
 gosdt_SOURCES = \
-	src/kernels/utility.hpp \
+	src/types.hpp \
+	src/integrity_violation.hpp \
+	src/optimizer/diagnosis/false_convergence.hpp \
+	src/optimizer/diagnosis/non_convergence.hpp \
+	src/optimizer/diagnosis/trace.hpp \
+	src/optimizer/diagnosis/tree.hpp \
+	src/optimizer/dispatch/dispatch.hpp \
+	src/optimizer/extraction/models.hpp \
 	src/bitmask.cpp \
 	src/bitmask.hpp \
-	src/key.cpp \
-	src/key.hpp \
-	src/key_pair.cpp \
-	src/key_pair.hpp \
+	src/configuration.cpp \
+	src/configuration.hpp \
 	src/task.cpp \
 	src/task.hpp \
+	src/message.cpp \
+	src/message.hpp \
+	src/tile.cpp \
+	src/tile.hpp \
 	src/graph.cpp \
 	src/graph.hpp \
 	src/queue.cpp \
@@ -60,6 +68,10 @@ gosdt_SOURCES = \
 	src/dataset.hpp \
 	src/optimizer.cpp \
 	src/optimizer.hpp \
+	src/state.cpp \
+	src/state.hpp \
+	src/local_state.cpp \
+	src/local_state.hpp \
 	src/gosdt.cpp \
 	src/gosdt.hpp \
 	src/main.cpp \
@@ -72,15 +84,24 @@ gosdt_test_LDFLAGS = $(LD_FLAGS)
 gosdt_test_LDADD = $(LD_ADD)
 
 gosdt_test_SOURCES = \
-	src/kernels/utility.hpp \
+	src/types.hpp \
+	src/integrity_violation.hpp \
+	src/optimizer/diagnosis/false_convergence.hpp \
+	src/optimizer/diagnosis/non_convergence.hpp \
+	src/optimizer/diagnosis/trace.hpp \
+	src/optimizer/diagnosis/tree.hpp \
+	src/optimizer/dispatch/dispatch.hpp \
+	src/optimizer/extraction/models.hpp \
 	src/bitmask.cpp \
 	src/bitmask.hpp \
-	src/key.cpp \
-	src/key.hpp \
-	src/key_pair.cpp \
-	src/key_pair.hpp \
+	src/configuration.cpp \
+	src/configuration.hpp \
 	src/task.cpp \
 	src/task.hpp \
+	src/message.cpp \
+	src/message.hpp \
+	src/tile.cpp \
+	src/tile.hpp \
 	src/graph.cpp \
 	src/graph.hpp \
 	src/queue.cpp \
@@ -95,17 +116,16 @@ gosdt_test_SOURCES = \
 	src/dataset.hpp \
 	src/optimizer.cpp \
 	src/optimizer.hpp \
+	src/state.cpp \
+	src/state.hpp \
+	src/local_state.cpp \
+	src/local_state.hpp \
 	src/gosdt.cpp \
 	src/gosdt.hpp \
 	test/test_bitmask.hpp \
-	test/test_key.hpp \
-	test/test_minimization.hpp \
-	test/test_summation.hpp \
-	test/test_alternative.hpp \
-	test/test_summand.hpp \
-	test/test_graph.hpp \
+	test/test_index.hpp \
 	test/test_queue.hpp \
-	test/test_dataset.hpp \
+	test/test_consistency.hpp \
 	test/test.cpp \
 	test/test.hpp
 

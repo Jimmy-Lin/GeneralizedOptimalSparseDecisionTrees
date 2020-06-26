@@ -1,136 +1,493 @@
 #include "index.hpp"
 
-unsigned int Index::rshifts[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
+#ifdef INCLUDE_OPENCL
+cl::Device Index::device = cl::Device();
+cl::Platform Index::platform = cl::Platform();
+cl::Context Index::context = cl::Context();
+cl::Program Index::program = cl::Program();
+cl::CommandQueue Index::queue = cl::CommandQueue();
+unsigned int Index::group_size = 48;
+#endif
 
-// The basic implementation is a segment tree
-// However, there might be cases later on where it's faster to perform this using a BLAS library
 Index::Index(void) {}
 
-Index::Index(std::vector< float > const & source) : nativeSource(source) {
-    this -> source.resize(source.size());
-    std::copy(source.begin(), source.end(), this -> source.begin());
-    this -> size = source.size();
-    this -> data.resize(4 * source.size());
-//    build(source, this -> data, 1, 0, source.size() - 1);
-    buildDP(source, this -> data); // switch above line with this one to use segment tree
+Index::Index(std::vector< std::vector< float > > const & src) {
+    this -> size = src.size();
+    this -> width = src.begin() -> size();
+    unsigned int number_of_blocks, block_offset;
+    Bitmask::block_layout(size, &number_of_blocks, &block_offset);
+    this -> num_blocks = number_of_blocks;
+
+    // this -> parallel_threshold = ~0; // Use max int to disable parallel for now
+
+    build_prefixes(src, this -> prefixes);
+
+    this -> source.resize(this -> size * this -> width, 0.0);
+    for (unsigned int i = 0;  i < this -> size; ++i) {
+        for (unsigned int j = 0; j < this -> width; ++j) {
+            this -> source[i * this -> width + j] = src.at(i).at(j);
+        }
+    }
+    initialize_kernel();
+    // benchmark();
 }
 
 Index::~Index(void) {}
 
-void Index::build(std::vector< float > const & source, std::vector< float > & tree, unsigned int target, unsigned int left, unsigned int right) {
-    if (left == right) {
-        tree[target] = source[left];
-    } else {
-        unsigned int split = (left + right) / 2; // Intentional Floor Division
-        build(source, tree, target * 2, left, split); // Build Left Bisection
-        build(source, tree, target * 2 + 1, split + 1, right); // Build Right Bisection
-        tree[target] = tree[target * 2] + tree[target * 2 + 1]; // Compute the sums based on the built bisections
+
+void Index::precompute(void) {
+}
+
+void Index::build_prefixes(std::vector< std::vector< float > > const & src, std::vector< std::vector< float > > & prefixes) {
+    // Compute a scan over the source vector, tracker[i] == sum(source[0..i-1])
+    std::vector< float > init(this -> width, 0.0); // First entries for the prefix sum
+    prefixes.emplace_back(init);
+    for (unsigned int i = 0; i < this -> size; i++) {
+        std::vector< float > const & source_row = src.at(i);
+        std::vector< float > const & prefix_row = prefixes.at(i);
+        std::vector< float > new_row;
+        for (unsigned int j = 0; j < this -> width; ++j) {
+            new_row.emplace_back(source_row.at(j) + prefix_row.at(j));
+        }
+        prefixes.emplace_back(new_row);
     }
 }
 
-// build dp table --> called tracker instead of tree
-void Index::buildDP(std::vector< float > const & source, std::vector< float > & tracker) {
-    tracker[0] = 0;
-    for (int i = 0; i < source.size(); i++) {
-        tracker[i+1] = source[i] + tracker[i];
+void Index::sum(Bitmask const & indicator, float * accumulator) const {
+    bit_sequential_sum(indicator, accumulator);
+    float const epsilon = std::numeric_limits<float>::epsilon();
+    for (unsigned int j = 0; j < this -> width; ++j) {
+        if (accumulator[j] < epsilon) { accumulator[j] = 0.0; }
     }
 }
 
-float Index::sum(void) const {
-    return sum(0, size - 1);
+void Index::bit_sequential_sum(Bitmask const & indicator, float * accumulator) const {
+    unsigned int max = indicator.size();
+    bool sign = true;
+    unsigned int i = indicator.scan(0, true);;
+    unsigned int j = indicator.scan(i, !sign);
+    while (j <= max) {
+        if (sign) {
+            {
+                std::vector< float > const & finish = this -> prefixes.at(j);
+                for (int k = this -> width; --k >= 0;) { accumulator[k] += finish.at(k); }
+            }
+            {
+                std::vector< float > const & start = this -> prefixes.at(i);
+                for (int k = this -> width; --k >= 0;) { accumulator[k] -= start.at(k); }
+            }
+        }
+        if (j == max) { break; }
+        i = j;
+        sign = !sign;
+        j = indicator.scan(i, !sign);
+    }
 }
 
-float Index::sum(unsigned int query_left, unsigned int query_right) const {
-//    return sum(1, 0, size - 1, query_left, query_right);
-    return sumDP(query_left, query_right); // switch above line with this one to use segment tree
+void Index::block_sequential_sum(bitblock * blocks, float * accumulator) const {
+    unsigned int offset = 0;
+    for (unsigned int i = 0; i < this -> num_blocks; ++i) {
+        bitblock block = blocks[i];
+        for (unsigned int range_index = 0; range_index < sizeof(bitblock) / sizeof(rangeblock); ++range_index) {
+            unsigned int local_offset = offset + range_index * 8 * sizeof(rangeblock);
+            unsigned int shift = range_index * 8 * sizeof(rangeblock);
+            block_sequential_sum(0xffff & (block >> shift), local_offset, accumulator);
+        }
+        offset += 8 * sizeof(bitblock);
+    }
 }
 
-float Index::sum(unsigned int target, unsigned int left, unsigned int right, unsigned int query_left, unsigned int query_right) const {
-    if (query_left > query_right) { return 0; }
-    if (left == query_left && right == query_right) { return this -> data[target]; }
-    unsigned int split = (left + right ) / 2; // Intentional Floor Division
-    return sum(target * 2, left, split, query_left, std::min(query_right, split)) 
-        + sum(target * 2 + 1, split + 1, right, std::max(query_left, split + 1), query_right);
-}
+void Index::block_sequential_sum(rangeblock block, unsigned int offset, float * accumulator) const {
+    unsigned int local_offset = offset;
+    bool positive = ((block) & 1) == 1;
 
-float Index::sumDP(unsigned int query_left, unsigned int query_right) const {
-    return (this -> data[query_right+1]) - (this -> data[query_left]);
-}
+    std::vector<codeblock> const & encoding = Bitmask::ranges[block];
+    for (auto iterator = encoding.begin(); iterator != encoding.end(); ++iterator) {
+        codeblock packed_code = * iterator;
+        unsigned short code;
 
-// This function detects contiguous segments in the bitmask and performs a range query over the segment tree
-// for each segment.
-float Index::sum(Bitmask const & indicator) const {
-    float total = 0.0;
-    // Perform Run-length encoding to compress the data
-    unsigned int prior = 0;
-    unsigned int length = 1;
-    unsigned int i;
-    for (i = 0; i < size; ++i) {
-        if (indicator[i] == prior) { ++length; } else {
-            // The end of a contiguous selected segment 
-//            if (prior == 1) { total += sum(i - length, i - 1); }
-            if (prior == 1) { total += sumDP(i - length, i - 1); } // switch above line with this one to use segment tree
-            prior = indicator[i];
-            length = 1;
+        for (unsigned int range_index = 0; range_index < Bitmask::ranges_per_code; ++range_index) {
+            if (local_offset >= offset + 16 || local_offset >= this -> size) { break; }
+
+            unsigned int shift = range_index * Bitmask::bits_per_range;
+            code = (0xF & (packed_code >> shift)) + 1;
+
+            if (positive) {
+                std::vector< float > const & start = this -> prefixes.at(local_offset);
+                std::vector< float > const & finish = this -> prefixes.at(local_offset + code);
+                for (unsigned int j = 0; j < this -> width; ++j) { accumulator[j] += finish.at(j) - start.at(j); }
+            }
+            local_offset += code;
+            positive = !positive;
         }
     }
-//    if (prior == 1) { total += sum(i - length, i - 1); } // Don't forget the final segment
-    if (prior == 1) { total += sumDP(i - length, i - 1); } // Don't forget the final segment, switch above line with this one to use segment tree
-    return total;
 }
 
-Index Index::zeroOut(Bitmask const & other) const {
-    std::vector< float > temp = this -> data;
-    for (unsigned int i = 0; i < other.size(); i++) {
-        if (other[i] == 0) {
-            temp[i] = 0;
+std::string Index::to_string(void) const {
+    std::stringstream stream;
+    stream << "[";
+    for (unsigned int i = 0; i < this -> size; ++i) {
+        for (unsigned int j = 0; j < this -> width; ++j) {
+            stream << this -> source[i * this -> width + j];
+            stream << ",";
+        }
+        if (i+1 < this -> size) { stream << std::endl; }
+    }
+    stream << "]";
+    return stream.str();
+}
+
+
+void Index::initialize_kernel(void) {
+#ifdef INCLUDE_OPENCL
+    set_platform(0);
+    set_device(Index::platform, 1);
+
+    std::cout << "Using platform: " << Index::platform.getInfo<CL_PLATFORM_NAME>() << std::endl;
+    std::cout << "Using device: " << Index::device.getInfo<CL_DEVICE_NAME>() << std::endl;
+
+    Index::context = cl::Context({Index::device});
+    cl::Program::Sources sources;
+    std::stringstream kernel_stream;
+    kernel_stream << "void kernel selective_sum(global const unsigned int * selector, global const float * data, global float * output) {" << std::endl;
+    kernel_stream << "   unsigned int global_id = get_global_id(0);" << std::endl;
+    kernel_stream << "   unsigned int group_id = global_id / " << Index::group_size << ";" << std::endl;
+    kernel_stream << "   unsigned int local_id = global_id % " << Index::group_size << ";" << std::endl;
+
+    kernel_stream << "   unsigned int block = selector[global_id / " << 8 * Bitmask::bits_per_block << "];" << std::endl;
+    kernel_stream << "   float selected = (block >> (global_id % " << 8 * Bitmask::bits_per_block << ")) & 1;" << std::endl;
+
+    kernel_stream << "   local float working[" << (Index::group_size * this -> width) << "];" << std::endl;
+    kernel_stream << "   for (unsigned int col = 0; col < " << this -> width << "; ++col) {" << std::endl;
+    kernel_stream << "       if (global_id < " << this -> size << ") {" << std::endl;
+    kernel_stream << "           working[local_id * " << this -> width << " + col] = selected * data[global_id * " << this -> width << " + col];" << std::endl;
+    kernel_stream << "       } else {" << std::endl;
+    kernel_stream << "           working[local_id * " << this -> width << " + col] = 0.0;" << std::endl;
+    kernel_stream << "       }" << std::endl;
+    kernel_stream << "   }" << std::endl;
+    kernel_stream << "   barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
+
+    kernel_stream << "   unsigned int size = " << this -> size << ";" << std::endl;
+    kernel_stream << "   unsigned int groups = " << this -> num_blocks << ";" << std::endl;
+    kernel_stream << "   while (size > 1) {" << std::endl;
+
+    kernel_stream << "       if (group_id <= groups) {" << std::endl;
+    kernel_stream << "           for (unsigned int stride = " << Index::group_size / 2 << "; stride >= 1; stride /= 2) {" << std::endl;
+    kernel_stream << "               if (local_id < stride) {" << std::endl;
+    kernel_stream << "                   for (unsigned int col = 0; col < " << this -> width << "; ++col) {" << std::endl;
+    kernel_stream << "                       working[local_id * " << this -> width << " + col] += working[(local_id + stride) * " << this -> width << " + col];" << std::endl;
+    kernel_stream << "                   }" << std::endl;
+    kernel_stream << "               }" << std::endl;
+    kernel_stream << "               barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
+    kernel_stream << "               if (stride == 1) { break; }" << std::endl;
+    kernel_stream << "           }" << std::endl;
+    kernel_stream << "       }" << std::endl;
+
+    kernel_stream << "       if (local_id == 0) {" << std::endl;
+    kernel_stream << "           for (unsigned int col = 0; col < " << this -> width << "; ++col) {" << std::endl;
+    kernel_stream << "               output[group_id * " << this -> width << " + col] = working[local_id * " << this -> width << " + col];" << std::endl;
+    kernel_stream << "           }" << std::endl;
+    kernel_stream << "       }" << std::endl;
+    kernel_stream << "       barrier(CLK_GLOBAL_MEM_FENCE);" << std::endl;
+
+    kernel_stream << "       for (unsigned int col = 0; col < " << this -> width << "; ++col) {" << std::endl;
+    kernel_stream << "           working[local_id * " << this -> width << " + col] = 0.0;" << std::endl;
+    kernel_stream << "       }" << std::endl;
+
+    kernel_stream << "       if (global_id < size) {" << std::endl;
+    kernel_stream << "           for (unsigned int col = 0; col < " << this -> width << "; ++col) {" << std::endl;
+    kernel_stream << "               working[local_id * " << this -> width << " + col] = output[global_id * " << this -> width << " + col];" << std::endl;
+    kernel_stream << "           }" << std::endl;
+    kernel_stream << "       }" << std::endl;
+    kernel_stream << "       barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
+
+    kernel_stream << "       size = groups;" << std::endl;
+    kernel_stream << "       groups = size / " << Index::group_size << " + (unsigned int)(size % groups == 0);" << std::endl;
+    kernel_stream << "   }" << std::endl;
+
+    kernel_stream << "   return;" << std::endl;
+    kernel_stream << "}" << std::endl;
+
+    std::string kernel_source = kernel_stream.str();
+    sources.push_back({kernel_source.c_str(), kernel_source.length()});
+    Index::program = cl::Program(Index::context, sources);
+    if (Index::program.build({Index::device}) != CL_SUCCESS) {
+        std::cout << "Error building: " << Index::program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(Index::device) << std::endl;
+        exit(1);
+    }
+
+    Index::queue = cl::CommandQueue(Index::context, Index::device, CL_QUEUE_PROFILING_ENABLE);
+    // Index::queue = cl::CommandQueue(Index::context, Index::device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
+
+    std::vector< float > data = this -> source;
+    this -> data_buffer = cl::Buffer(Index::context, CL_MEM_READ_ONLY, sizeof(float) * data.size());
+    int error_code = Index::queue.enqueueWriteBuffer(data_buffer, CL_TRUE, 0, sizeof(float) * data.size(), data.data());
+    if (error_code != CL_SUCCESS) {
+        std::cout << "Error writing data input" << std::endl;
+        std::cout << "Error Code: " << error_code << std::endl;
+        exit(1);
+    }
+#endif
+}
+
+#ifdef INCLUDE_OPENCL
+void Index::set_platform(int index) {
+    std::vector<cl::Platform> all_platforms;
+    cl::Platform::get(&all_platforms);
+
+    if (all_platforms.size() == 0) {
+        std::cout << "No platforms found. Check OpenCL installation!\n" << std::endl;
+        exit(1);
+    }
+    Index::platform = all_platforms[index];
+}
+
+void Index::set_device(cl::Platform platform, int index, bool display) {
+    std::vector<cl::Device> all_devices;
+    platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+    if (all_devices.size() == 0) {
+        std::cout << "No devices found. Check OpenCL installation!\n" << std::endl;
+        exit(1);
+    }
+
+    if (display) {
+        for (int j = 0; j < all_devices.size(); j++)
+            printf("Device %d: %s\n", j, all_devices[j].getInfo<CL_DEVICE_NAME>().c_str());
+    }
+    Index::device = all_devices[index];
+}
+
+void Index::parallel_sum(bitblock * blocks, float * accumulator, bool blocking, bool profile) const {
+    unsigned int group_count = (this -> size / Index::group_size) + (this -> size % Index::group_size != 0);
+    unsigned int thread_count = group_count * Index::group_size;
+
+    std::vector< float > output((this -> width) * (group_count), 0.0);
+
+    cl::Buffer select_buffer(Index::context, CL_MEM_READ_ONLY, sizeof(unsigned int) * this -> num_blocks);
+    cl::Buffer output_buffer(Index::context, CL_MEM_READ_WRITE, sizeof(float) * output.size());
+
+    int error_code;
+
+    cl::Event input_event;
+    error_code = Index::queue.enqueueWriteBuffer(select_buffer, CL_FALSE, 0, sizeof(unsigned int) * this -> num_blocks, blocks,
+         NULL, & input_event);
+    if (error_code != CL_SUCCESS) {
+        std::cout << "Error writing selector input" << std::endl;
+        std::cout << "Error Code: " << error_code << std::endl;
+        exit(1);
+    }
+
+    cl::Kernel kernel(Index::program, "selective_sum");
+    error_code = kernel.setArg(0, select_buffer);
+    if (error_code != CL_SUCCESS) {
+        std::cout << "Error setting argument 0" << std::endl;
+        std::cout << "Error Code: " << error_code << std::endl;
+        exit(1);
+    }
+    error_code = kernel.setArg(1, this -> data_buffer);
+    if (error_code != CL_SUCCESS) {
+        std::cout << "Error setting argument 1" << std::endl;
+        std::cout << "Error Code: " << error_code << std::endl;
+        exit(1);
+    }
+    error_code = kernel.setArg(2, output_buffer);
+    if (error_code != CL_SUCCESS) {
+        std::cout << "Error setting argument 2" << std::endl;
+        std::cout << "Error Code: " << error_code << std::endl;
+        exit(1);
+    }
+
+    cl::Event execution_event;
+    std::vector<cl::Event> execution_dependencies{input_event};
+    error_code = Index::queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(thread_count), cl::NDRange(Index::group_size),
+        & execution_dependencies, & execution_event);
+    if (error_code != CL_SUCCESS) {
+        std::cout << "Error enqueing kernel" << std::endl;
+        std::cout << "Error Code: " << error_code << std::endl;
+        exit(1);
+    }
+
+    cl::Event output_event;
+    std::vector<cl::Event> output_dependencies{execution_event};
+    // error_code = Index::queue.enqueueReadBuffer(output_buffer, CL_TRUE, 0, sizeof(float) * output.size(), output.data(), NULL, & output_event);
+    error_code = Index::queue.enqueueReadBuffer(output_buffer, CL_FALSE, 0, sizeof(float) * this -> width, accumulator,
+        & output_dependencies, & output_event);
+    if (error_code != CL_SUCCESS) {
+        std::cout << "Error reading output" << std::endl;
+        std::cout << "Error Code: " << error_code << std::endl;
+        exit(1);
+    };
+
+    if (blocking) { output_event.wait(); }
+
+    // for (unsigned int k = 0; k < group_count; ++k) {
+    //     for (unsigned int j = 0; j < this -> width; ++j) {
+    //         accumulator[j] += output.at(k * this -> width + j);
+    //     }
+    // }
+
+    output_event.wait();
+
+    if (profile) {
+        unsigned long queued, submitted, started, finished;
+
+        input_event.getProfilingInfo(CL_PROFILING_COMMAND_QUEUED, & queued);
+        input_event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, & submitted);
+        input_event.getProfilingInfo(CL_PROFILING_COMMAND_START, & started);
+        input_event.getProfilingInfo(CL_PROFILING_COMMAND_END, & finished);
+        std::cout << "GPU Input Profile:" << std::endl;
+        std::cout << "  Total: " << (finished - queued) << " ns" << std::endl;
+        std::cout << "  Queue: " << (submitted - queued) << " ns" << std::endl;
+        std::cout << "  Transmission: " << (started - submitted) << " ns" << std::endl;
+        std::cout << "  Execution: " << (finished - started) << std::endl;
+
+        execution_event.getProfilingInfo(CL_PROFILING_COMMAND_QUEUED, &queued);
+        execution_event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, &submitted);
+        execution_event.getProfilingInfo(CL_PROFILING_COMMAND_START, &started);
+        execution_event.getProfilingInfo(CL_PROFILING_COMMAND_END, &finished);
+        std::cout << "GPU Execution Profile:" << std::endl;
+        std::cout << "  Total: " << (finished - queued) << " ns" << std::endl;
+        std::cout << "  Queue: " << (submitted - queued) << " ns" << std::endl;
+        std::cout << "  Transmission: " << (started - submitted) << " ns" << std::endl;
+        std::cout << "  Execution: " << (finished - started) << std::endl;
+
+        output_event.getProfilingInfo(CL_PROFILING_COMMAND_QUEUED, &queued);
+        output_event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, &submitted);
+        output_event.getProfilingInfo(CL_PROFILING_COMMAND_START, &started);
+        output_event.getProfilingInfo(CL_PROFILING_COMMAND_END, &finished);
+        std::cout << "GPU Output Profile:" << std::endl;
+        std::cout << "  Total: " << (finished - queued) << " ns" << std::endl;
+        std::cout << "  Queue: " << (submitted - queued) << " ns" << std::endl;
+        std::cout << "  Transmission: " << (started - submitted) << " ns" << std::endl;
+        std::cout << "  Execution: " << (finished - started) << std::endl;
+
+        exit(1);
+    }
+}
+#endif
+
+void Index::benchmark(void) const
+{
+    Bitmask indicator(this->size, true);
+    for (unsigned int i = 0; i < this->size; ++i)
+    {
+        indicator.set(i, (i % 7 != 0));
+    }
+    bitblock *blocks = indicator.data();
+    std::vector<float, tbb::scalable_allocator<float>> accumulator(this->width);
+    unsigned int sample_size = 10000;
+
+    float block_min = std::numeric_limits<float>::max();
+    float block_max = -std::numeric_limits<float>::max();
+    float block_avg;
+
+    float bit_min = std::numeric_limits<float>::max();
+    float bit_max = -std::numeric_limits<float>::max();
+    float bit_avg;
+
+#ifdef INCLUDE_OPENCL
+    float par_min = std::numeric_limits<float>::max();
+    float par_max = -std::numeric_limits<float>::max();
+    float par_avg;
+#endif
+
+    auto block_start = std::chrono::high_resolution_clock::now();
+    for (unsigned int i = 0; i < sample_size; ++i)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        block_sequential_sum(blocks, accumulator.data());
+        auto finish = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start);
+
+        block_min = std::min((float)duration.count() / 1000, block_min);
+        block_max = std::max((float)duration.count() / 1000, block_max);
+    }
+    auto block_finish = std::chrono::high_resolution_clock::now();
+    block_avg = (float)(std::chrono::duration_cast<std::chrono::nanoseconds>(block_finish - block_start).count()) / sample_size / 1000;
+
+    auto bit_start = std::chrono::high_resolution_clock::now();
+    for (unsigned int i = 0; i < sample_size; ++i)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        bit_sequential_sum(indicator, accumulator.data());
+        auto finish = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start);
+
+        bit_min = std::min((float)duration.count() / 1000, bit_min);
+        bit_max = std::max((float)duration.count() / 1000, bit_max);
+    }
+    auto bit_finish = std::chrono::high_resolution_clock::now();
+    bit_avg = (float)(std::chrono::duration_cast<std::chrono::nanoseconds>(bit_finish - bit_start).count()) / sample_size / 1000;
+
+#ifdef INCLUDE_OPENCL
+    auto par_start = std::chrono::high_resolution_clock::now();
+    for (unsigned int i = 0; i < sample_size; ++i)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        parallel_sum(blocks, accumulator.data(), true, false);
+        auto finish = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(finish - start);
+
+        par_min = std::min((float)duration.count() / 1000, par_min);
+        par_max = std::max((float)duration.count() / 1000, par_max);
+    }
+    auto par_finish = std::chrono::high_resolution_clock::now();
+    par_avg = (float)(std::chrono::duration_cast<std::chrono::nanoseconds>(par_finish - par_start).count()) / sample_size / 1000;
+#endif
+
+    std::cout << "Index Benchmark Results: " << std::endl;
+    std::cout << "Block Sequential: " << std::endl;
+    std::cout << "  Min: " << block_min << " ms" << std::endl;
+    std::cout << "  Avg: " << block_avg << " ms" << std::endl;
+    std::cout << "  Max: " << block_max << " ms" << std::endl;
+    std::cout << "Bit Sequential: " << std::endl;
+    std::cout << "  Min: " << bit_min << " ms" << std::endl;
+    std::cout << "  Avg: " << bit_avg << " ms" << std::endl;
+    std::cout << "  Max: " << bit_max << " ms" << std::endl;
+
+#ifdef INCLUDE_OPENCL
+    std::cout << "Parallel: " << std::endl;
+    std::cout << "  Min: " << par_min << " ms" << std::endl;
+    std::cout << "  Avg: " << par_avg << " ms" << std::endl;
+    std::cout << "  Max: " << par_max << " ms" << std::endl;
+    std::cout << std::endl;
+    std::cout << "GPU Profile Results: " << std::endl;
+    parallel_sum(blocks, accumulator, true, true);
+#endif
+
+#ifdef INCLUDE_OPENCL
+    // Match results
+    std::vector<float, tbb::scalable_allocator<float>> block_accumulator(this->width);
+    std::vector<float, tbb::scalable_allocator<float>> bit_accumulator(this->width);
+    std::vector<float, tbb::scalable_allocator<float>> par_accumulator(this->width);
+    bit_sequential_sum(blocks, bit_accumulator);
+    block_sequential_sum(blocks, block_accumulator);
+    parallel_sum(blocks, par_accumulator, true, false);
+
+    bool mismatch;
+    for (unsigned int j = 0; j < this->width; ++j)
+    {
+        if (std::abs(bit_accumulator.at(j) - par_accumulator.at(j)) > 10 * std::numeric_limits<float>::epsilon())
+        {
+            mismatch = true;
         }
     }
-    return Index(temp);
+    if (mismatch)
+    {
+        std::cout << "Mismatch Detected for Indicator: " << indicator.to_string() << std::endl;
+        std::cout << "Expected: ";
+        for (unsigned int j = 0; j < this->width; ++j)
+        {
+            std::cout << bit_accumulator.at(j) << ",";
+        }
+        std::cout << std::endl;
+        std::cout << "Got: ";
+        for (unsigned int j = 0; j < this->width; ++j)
+        {
+            std::cout << par_accumulator.at(j) << ",";
+        }
+        std::cout << std::endl;
+    }
+#endif
+    exit(1);
 }
-
-// float Index::sum(Bitmask const & indicator) const {
-//     // Hash the literal content
-//     std::vector< unsigned long, tbb::scalable_allocator< unsigned long > > blocks(indicator.value().num_blocks());
-//     boost::to_block_range(indicator.value(), blocks.begin());
-//     // Later convert this to stack memory
-//     std::vector< unsigned int, tbb::scalable_allocator< unsigned int > > expansion(indicator.size());
-//     // initialize in constructor
-//     simdpp::uint32<32> * shifts = reinterpret_cast< simdpp::uint32<32> * >(Index::rshifts);
-//     unsigned int block_index = 0;
-//     for (auto block : blocks) {
-//         {
-//             simdpp::uint32<32> broadcast = simdpp::load_splat(&block);
-//             simdpp::uint32<32> flags = simdpp::bit_and(simdpp::shift_r(broadcast, * shifts), 0x01);
-//             simdpp::store( &(expansion[block_index * sizeof(unsigned long)]), flags);
-//         }
-//         block = block >> 32;
-//         {
-//             simdpp::uint32<32> broadcast = simdpp::load_splat(&block);
-//             simdpp::uint32<32> flags = simdpp::bit_and(simdpp::shift_r(broadcast, * shifts), 0x01);
-//             simdpp::store( &(expansion[32 + block_index * sizeof(unsigned long)]), flags);
-//         }`
-//         ++block_index;
-//     }
-//     blasmask mask(expansion.size());
-//     std::copy(expansion.begin(), expansion.end(), mask.begin());
-//     float result = boost::numeric::ublas::inner_prod(mask, this -> source);
-//     return result;
-// }
-
-// float Index::sum(Bitmask const & indicator) const {
-//     // Hash the literal content
-//     std::vector< unsigned long, tbb::scalable_allocator< unsigned long > > blocks(indicator.value().num_blocks());
-//     boost::to_block_range(indicator.value(), blocks.begin());
-
-
-//     simdpp::mask_int64<size>* mblocks = reinterpret_cast<decltype(mblocks)>(blocks.data());
-
-//     simdpp::uint64<size> zeros = simdpp::make_uint(0);
-
-//     simdpp::float32<size>* vsources = reinterpret_cast<decltype(vsources)>(this->nativeSource);
-
-//     auto rv = simdpp::blend(*vsources, zeros, *mblocks).eval();
-
-//     return simdpp::reduce_add(rv);
-// }

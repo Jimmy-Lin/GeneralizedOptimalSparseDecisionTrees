@@ -1,0 +1,10 @@
+dataset,number_of_samples,number_of_features,number_of_binary_features,number_of_classes,type
+iris,150,4,118,3,classification
+compas,12381,22,628,2,classification
+fico,10459,23,1917,2,classification
+
+hcv,1385,28,10548,4,classification
+nyclu,11008,78,41420,undetermined,classification
+broward,93643,18,undetermined,undetermined,regression
+adult,32560,14,22130,2,classification
+sleep,37,113,undetermined,undetermined,undetermined

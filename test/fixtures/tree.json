@@ -1,0 +1,188 @@
+[
+  {
+    "false": {
+      "false": {
+        "false": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0000"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0001"
+          }
+        },
+        "feature": 2,
+        "name": "b2",
+        "reference": 1,
+        "relation": "==",
+        "true": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0010"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0011"
+          }
+        }
+      },
+      "feature": 1,
+      "name": "b1",
+      "reference": 1,
+      "relation": "==",
+      "true": {
+        "false": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0100"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0101"
+          }
+        },
+        "feature": 2,
+        "name": "b2",
+        "reference": 1,
+        "relation": "==",
+        "true": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0110"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b0111"
+          }
+        }
+      }
+    },
+    "feature": 0,
+    "name": "b0",
+    "reference": 1,
+    "relation": "==",
+    "true": {
+      "false": {
+        "false": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1000"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1001"
+          }
+        },
+        "feature": 2,
+        "name": "b2",
+        "reference": 1,
+        "relation": "==",
+        "true": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1010"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1011"
+          }
+        }
+      },
+      "feature": 1,
+      "name": "b1",
+      "reference": 1,
+      "relation": "==",
+      "true": {
+        "false": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1100"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1101"
+          }
+        },
+        "feature": 2,
+        "name": "b2",
+        "reference": 1,
+        "relation": "==",
+        "true": {
+          "false": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1110"
+          },
+          "feature": 3,
+          "name": "b3",
+          "reference": 1,
+          "relation": "==",
+          "true": {
+            "complexity": 0.05000000074505806,
+            "loss": 0.0,
+            "name": "str",
+            "prediction": "b1111"
+          }
+        }
+      }
+    }
+  }
+]

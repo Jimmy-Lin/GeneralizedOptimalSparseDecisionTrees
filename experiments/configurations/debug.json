@@ -1,0 +1,20 @@
+{
+    "uncertainty_tolerance": 0.0,
+    "regularization": 0.01,
+    "upperbound": 0.0,
+    
+    "time_limit": 0,
+    "worker_limit": 1,
+    "model_limit": 1,
+
+    "verbose": true,
+    "diagnostics": false,
+    "balance": false,
+
+    "look_ahead": true,
+    "similar_support": true,
+    "cancellation": true,
+    "continuous_feature_exchange": true,
+    "feature_exchange": true,
+    "rule_list": false
+}

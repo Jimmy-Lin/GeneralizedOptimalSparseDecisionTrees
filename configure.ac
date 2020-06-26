@@ -1,6 +1,7 @@
 AC_PREREQ([2.69])
 AC_INIT([gosdt],[0.1.0])
-: ${CXXFLAGS=-O3}
+: ${CXXFLAGS=-O3} # for production release
+# : ${CXXFLAGS=-O0 -g} # for debugging
 AC_CONFIG_MACRO_DIR([auto])
 AC_CONFIG_AUX_DIR([build])
 m4_include([auto/ax_cxx_compile_stdcxx.m4])
@@ -53,6 +54,10 @@ AC_LANG(C++) # Set test language to C++
 
 # Check for a standard header
 AC_CHECK_HEADERS([iostream], [], [AC_MSG_WARN([IO Stream not found.])])
+
+# Check for GMP Library
+AC_CHECK_LIB(gmp, __gmpz_init, ,
+  [AC_MSG_ERROR([GNU MP is missing on this system. Please install GNU MP and try again.])])
 
 # Check for Boost Library
 BOOST_REQUIRE([1.55])

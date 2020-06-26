@@ -1,0 +1,32 @@
+[
+  {
+    "false": {
+      "false": {
+        "complexity": 0.05000000074505806,
+        "loss": 0.06666658818721771,
+        "name": "class",
+        "prediction": "Iris-versicolor"
+      },
+      "feature": 1,
+      "name": "sepal_width",
+      "reference": 2.95,
+      "relation": ">=",
+      "true": {
+        "complexity": 0.05000000074505806,
+        "loss": 0.0733330249786377,
+        "name": "class",
+        "prediction": "Iris-setosa"
+      }
+    },
+    "feature": 0,
+    "name": "sepal_length",
+    "reference": 6.15,
+    "relation": ">=",
+    "true": {
+      "complexity": 0.05000000074505806,
+      "loss": 0.10666656494140625,
+      "name": "class",
+      "prediction": "Iris-virginica"
+    }
+  }
+]

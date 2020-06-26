@@ -2,9 +2,9 @@
 #define OPTIMIZER_H
 
 // Invocation Priorities
-#define DELEGATION_PRIORITY 0
-#define INFORMATION_PRIORITY 1
-#define RESCOPE_PRIORITY 0
+#define INFORMATION_PRIORITY 0
+#define CONSTRAINT_PRIORITY 0
+#define EXPLORATION_PRIORITY 0
 
 #include <iostream>
 #include <fstream>
@@ -14,92 +14,126 @@
 
 #include <chrono>
 #include <unordered_map>
-#include <boost/dynamic_bitset.hpp>
 #include <tbb/tick_count.h>
-#include <tbb/scalable_allocator.h>
 #include <json/json.hpp>
 
+#include <alloca.h>
 
+#include "configuration.hpp"
 #include "dataset.hpp"
 #include "model.hpp"
+#include "task.hpp"
+#include "types.hpp"
 #include "graph.hpp"
 #include "queue.hpp"
+#include "integrity_violation.hpp"
 
 using json = nlohmann::json;
-
-typedef boost::dynamic_bitset< unsigned long, tbb::scalable_allocator< unsigned long > > bitset;
 
 class Optimizer {
 public:
     Optimizer(void);
-    Optimizer(Dataset & dataset, json const & configuration);
     ~Optimizer(void);
 
-    std::tuple< float, float> objective_boundary(void) const; // Returns the optimality gap's boundaries
-    float const uncertainty(void); // Determine the size of the optimality gap
-    bool const complete(void); // Determine if the overall problem has reached the target optimality gap
+    void load(std::istream & data_source);
 
-    bool const tick(int const id = 0); // Attempt a tick (Profiler is triggered here)
-    float const elapsed(void); // Determine the elapsed time
-    bool const timeout(void); // Determine if the time limit has been reached
+    void initialize(void);
+    void reset(void);
 
-    void iterate(int const id = 0); // Main iteration kernel which moves the optimization state forward
+    // @modifies lowerbound: the lowerbound on the global objective
+    // @modifies upperbound: the upperbound on the global objective
+    void objective_boundary(float * lowerbound, float * upperbound) const;
 
-    std::unordered_set< Model > models(unsigned int limit = 0); // Returns a (non-exhaustive) set of possibly optimal models given the current information
+    // @returns the current difference between the global upperbound and the global lowerbound
+    float uncertainty(void) const;
 
-    void diagnose_non_convergence(void); // Prints the remaining dependency that needs to be resolved in order to reach global optimality
-    void diagnose_false_convergence(void); // Prints the remaining dependency that needs to be resolved in order to reach global optimality
+    // @returns true of the algorithm has reached a termination condition
+    bool complete(void) const;
 
-    unsigned int size(void);
-    
+    // @returns the size fo the dependency graph
+    unsigned int size(void) const;
+
+    // @returns the real time spend in the optimization
+    float elapsed(void) const;
+
+    // @returns true if the configured time limit has been reached
+    bool timeout(void) const;
+
+    // @param id: ID of the requesting worker thread
+    // @returns true if an update occured to the global objective boundary
+    bool iterate(unsigned int id);
+
+    // @modifies results: stores all potentially optimal models in results
+    // @note: if the global optimality gap is non-zero, then results contains only models that fall within the optimality gap
+    // @note: if the global optimality gap is non-zero, there is no gaurantee that results necessarily contains the optimal model
+    void models(std::unordered_set< Model > & results);
+
+    // Generates snapshot data for trace visualization
+    void diagnostic_trace(int iteration, key_type const & focal_point);
+    // Generates snapshot data for trace-tree visualization
+    void diagnostic_tree(int iteration);
+
+    // Print diagnostic trace for detected non-convergence of algorithm
+    // Non-convergence is defined as the algorithm not terminating when it should have
+    void diagnose_non_convergence(void); 
+
+    // Print diagnositic trace for detected false-convergence of algorithm
+    // False-convergence is defined as a premature termination of the algorithm
+    void diagnose_false_convergence(void);
 private:
-    // Configuration Members
-    json _configuration;
-    float regularization;
-    float uncertainty_tolerance;
-    float time_limit;
-    unsigned int output_limit;
-
-    float optimism;
-    float equity;
-    unsigned int sample_depth;
-    float similarity_threshold;
-
-    unsigned int workers;
-    unsigned long ticks = 0;
-    unsigned long tick_duration = 1;
-
-    std::string profile_output = "";
-    std::string timing_output = "";
-
-    // Optimization State
-    Encoder encoder;
-    Dataset dataset;
-    Graph graph;
-    Queue queue;
 
     // Timing State
-    tbb::tick_count start_time;
-    tbb::tick_count last_tick;
+    tbb::tick_count start_time; // starting time of optimization
+    unsigned long ticks = 0; // Number of ticks passed
+    unsigned long tick_duration = 10000; // Number of iterations per tick
+    bool active = true; // Flag indicating whether the optimization is still active
 
-    json const & configuration(void) const;
+    // Analytics State
+    Tile root; // Root indicator
+    std::vector<int> translator; // Root indicator
 
-    // Result Extraction
-    std::unordered_set< Model > models(Key const & key, Task & task, unsigned int limit = 0);
+    float global_boundary = std::numeric_limits<float>::max(); // Global optimality gap
+    float global_upperbound = std::numeric_limits<float>::max(); // Global upperbound of the objective
+    float global_lowerbound = -std::numeric_limits<float>::max(); // Global lowerbound of the objective
+    std::vector< unsigned int > work_distribution; // Distribution of work done for each percentile
+    unsigned int explore = 0.0; // Distributtion of work from downward message
+    unsigned int exploit = 0.0; // Distribution of work from upward message
 
-    void diagnose_non_convergent_task(Key const &key);
-    void diagnose_falsely_convergent_task(Key const &key);
+    float cart(Bitmask const & capture_set, Bitmask const & feature_set, unsigned int id) const;
 
-    // Graph update kernel
-    // This is the function ran repeatedly on each node
-    void execute(Key const & key);
+    // @param message: message to handle
+    // @param id: id of the worker thread that is handling this message
+    // @returns true if the optimization is still active
+    bool dispatch(Message const & message, unsigned int id);
 
-    // Helpers to reduce the complexity of the graph update kernel
-    Task new_task(Key const & key, Bitmask const & sensitivity, similarity_index_table_type const & parent_similarity_index);
-    float const sample(Key const & key, Bitmask const & sensitivity, int const depth);
-    void async_call(Key const & key, float const primary_priority = 0, float const secondary_priority = 0, float const tertiary_priority = 0);
-    void async_return(Key const & key, float const primary_priority = 0, float const secondary_priority = 0, float const tertiary_priority = 0);
+    bool store_self(Tile const & identifier, Task const & task, vertex_accessor & self);
 
+    void store_children(Task & task, unsigned int id);
+
+    void link_to_parent(Tile const & parent, Bitmask const & features, Bitmask const & signs, float scope, Tile const & self, translation_type const & order, adjacency_accessor & parents);
+
+    void signal_exploiters(adjacency_accessor & parents, Task & self, unsigned int id);
+
+    bool load_children(Task & task, Bitmask const & features, unsigned int id);
+
+    bool load_parents(Tile const & identifier, adjacency_accessor & parents);
+
+    bool load_self(Tile const & identifier, vertex_accessor & self);
+
+    bool update_root(float lower, float upper);
+
+    // @param set: identifier for the root node from which to extract optimal models
+    // @modifies results: internal set of extracted models
+    void models(key_type const & identifier, std::unordered_set< Model * > & results, bool leaf = false);
+
+    void print(void) const;
+    void profile(void);
+
+    // Diagnostics
+    bool diagnose_non_convergence(key_type const & set);
+    bool diagnose_false_convergence(key_type const & set);
+    bool diagnostic_trace(key_type const & identifier, json & tracer, key_type const & focal_point);
+    bool diagnostic_tree(key_type const & identifier, json & tracer);
 };
 
 #endif

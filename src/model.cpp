@@ -2,72 +2,113 @@
 
 Model::Model(void) {}
 
-Model::Model(unsigned int feature, std::string feature_name, std::string type, std::string relation, std::string reference, std::map< bool, Model > const & submodels) :
-    feature(feature), feature_name(feature_name), type(type), relation(relation), reference(reference), submodels(submodels) {}
+Model::Model(std::shared_ptr<Bitmask> capture_set) {
+    std::string prediction_name, prediction_type, prediction_value;
+    float info, potential, min_loss, max_loss;
+    unsigned int target_index;
+    State::dataset.summary(* capture_set, info, potential, min_loss, max_loss, target_index, 0);
+    State::dataset.encoder.target_value(target_index, prediction_value);
+    State::dataset.encoder.header(prediction_name);
+    State::dataset.encoder.target_type(prediction_type);
 
-Model::Model(std::string feature_name, std::string type, std::string prediction, float loss, float complexity, Bitmask const & capture) :
-    feature_name(feature_name), type(type), prediction(prediction), loss(loss), complexity(complexity), capture(capture) {}
-
-
-bool Model::test_rational(std::string const & string) const {
-    std::string::const_iterator it = string.begin();
-    bool decimalPoint = false;
-    int min_size = 0;
-    if (string.size() > 0 && (string[0] == '-' || string[0] == '+')) {
-        it++;
-        min_size++;
-    }
-    while (it != string.end()) {
-        if (*it == '.') {
-            if (!decimalPoint) {
-                decimalPoint = true;
-            } else {
-                break;
-            }
-        } else if (!std::isdigit(*it)) {
-            break;
-        }
-        ++it;
-    }
-    return string.size() > min_size && it == string.end();
+    this -> binary_target = target_index;
+    this -> name = prediction_name;
+    this -> type = prediction_type;
+    this -> prediction = prediction_value;
+    this -> _loss = max_loss;
+    this -> _complexity = Configuration::regularization;
+    this -> capture_set = capture_set;
+    this -> terminal = true;
 }
 
-bool Model::test_integral(std::string const & string) const {
-    std::string::const_iterator it = string.begin();
-    int min_size = 0;
-    if (string.size() > 0 && (string[0] == '-' || string[0] == '+')) {
-        it++;
-        min_size++;
-    }
-    while (it != string.end()) {
-        if (!std::isdigit(*it)) { break; }
-        ++it;
-    }
-    return string.size() > min_size && it == string.end();
+Model::Model(unsigned int binary_feature_index, std::shared_ptr<Model> negative, std::shared_ptr<Model> positive) {
+    unsigned int feature_index; 
+    std::string feature_name, feature_type, relation, reference;
+    State::dataset.encoder.decode(binary_feature_index, & feature_index);                  
+    State::dataset.encoder.encoding(binary_feature_index, feature_type, relation, reference);
+    State::dataset.encoder.header(feature_index, feature_name);
+
+    this -> binary_feature = binary_feature_index;
+    this -> feature = feature_index;
+    this -> name = feature_name;
+    this -> type = feature_type;
+    this -> relation = relation;
+    this -> reference = reference;
+    this -> negative = negative;
+    this -> positive = positive;
+    this -> terminal = false;
 }
 
-std::set< Bitmask > Model::partitions(void) const {
-    std::set< Bitmask > results;
-    if (this -> submodels.size() == 0) {
-        results.insert(this -> capture);
+Model::~Model(void) {}
+
+void Model::identify(Tile const & identifier) {
+    this -> identifier = identifier;
+}
+
+bool Model::identified(void) { return this -> identifier.content().size() > 0; }
+
+void Model::translate_self(translation_type const & translation) {
+    this -> self_translator = translation;
+}
+
+void Model::translate_negatives(translation_type const & translation) {
+    this -> negative_translator = translation;
+}
+
+void Model::translate_positives(translation_type const & translation) {
+    this -> positive_translator = translation;
+}
+
+void Model::_partitions(std::vector< Bitmask * > & addresses) const {
+    if (this -> terminal) {
+        addresses.push_back(this -> capture_set.get());
     } else {
-        std::map< bool, Model > const & submodel_map = this -> submodels;
-        for (auto iterator = submodel_map.begin(); iterator != submodel_map.end(); ++iterator) {
-            std::set<Bitmask> const & subpartitions = (iterator -> second).partitions();
-            for (auto subiterator = subpartitions.begin(); subiterator != subpartitions.end(); ++subiterator) {
-                results.insert(* subiterator);
-            }
-        }
+        this -> negative -> _partitions(addresses);
+        this -> positive -> _partitions(addresses);
     }
-    return results;
+
+    return;
+};
+
+void Model::partitions(std::vector< Bitmask * > & sorted_addresses) const {
+    std::vector< Bitmask * > addresses;
+    _partitions(addresses);
+    // std::cout << "_partition size: " << addresses.size() << std::endl;
+    std::map< unsigned int, Bitmask * > sorted;
+    // for (auto it = addresses.begin(); it != addresses.end(); ++it) {
+    //     Bitmask * address = * it;
+    //     std::cout << "Address: " << address << std::endl;
+
+    //     unsigned int size = address -> size();
+    //     for (unsigned int rank = 0; rank < size; ++rank) {
+    //         if (address -> get(rank) == 1) {
+    //             sorted[rank] = address;
+    //             break;
+    //         }
+    //     }
+    // }
+    // for (auto it = sorted.begin(); it != sorted.end(); ++it) {
+    //     sorted_addresses.push_back(it -> second);
+    // }
+    for (auto it = addresses.begin(); it != addresses.end(); ++it) {
+        sorted_addresses.push_back(* it);
+    }
+    // std::cout << "partition size: " << sorted_addresses.size() << std::endl;
+    return;
 };
 
 size_t const Model::hash(void) const {
-    std::set< Bitmask > const & masks = partitions();
-    size_t seed = masks.size();
-    for (auto iterator = masks.begin(); iterator != masks.end(); ++iterator) {
-        seed ^=  (* iterator).hash() + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    // std::cout << "hash functiion entry" << std::endl;
+
+    std::vector< Bitmask * > addresses;
+    partitions(addresses);
+    size_t seed = addresses.size();
+    // std::cout << "final partition size: " << addresses.size() << std::endl;
+    for (auto it = addresses.begin(); it != addresses.end(); ++it) {
+        // std::cout << "partition: " << (**it).to_string() << std::endl;
+        seed ^=  ((**it).hash()) + 0x9e3779b9 + (seed<<6) + (seed>>2);
     }
+    // std::cout << "hash: " << seed << std::endl;
     return seed;
 }
 
@@ -75,13 +116,15 @@ bool const Model::operator==(Model const & other) const {
     if (hash() != other.hash()) {
         return false;
     } else {
-        std::set< Bitmask > const & masks = partitions();
-        std::set< Bitmask > const & other_masks = other.partitions();
+        std::vector< Bitmask * > masks;
+        std::vector< Bitmask * > other_masks;
+        partitions(masks);
+        other.partitions(other_masks);
         if (masks.size() != other_masks.size()) { return false; }
         auto iterator = masks.begin();
         auto other_iterator = other_masks.begin();
         while (iterator != masks.end() && other_iterator != other_masks.end()) {
-            if ((* iterator) != (* other_iterator)) { return false; }
+            if ((** iterator) != (** other_iterator)) { return false; }
             ++iterator;
             ++other_iterator;
         }
@@ -89,55 +132,136 @@ bool const Model::operator==(Model const & other) const {
     }
 }
 
-std::string Model::predict(Bitmask const & sample) const {
+float Model::loss(void) const {
     // Currently a stub, need to implement
-    if (this -> submodels.size() == 0) {
-        return this -> prediction;
+    if (this -> terminal) {
+        return this -> _loss;
     } else {
-        unsigned branch_index = sample[this -> feature];
-        Model const & submodel = this-> submodels.at(branch_index);
-        return submodel.predict(sample);
+        return this -> negative -> loss() + this -> positive -> loss();
     }
 }
 
-std::string Model::serialize(void) const {
-    return to_json().dump();
+float Model::complexity(void) const {
+    // Currently a stub, need to implement
+    if (this -> terminal) {
+        return this -> _complexity;
+    } else {
+        return this -> negative -> complexity() + this -> positive -> complexity();
+    }
 }
 
-std::string Model::serialize(int const spacing) const {
-    return to_json().dump(spacing);
+void Model::predict(Bitmask const & sample, std::string & prediction) const {
+    // Currently a stub, need to implement
+    return;
 }
 
-json Model::to_json(void) const {
+void Model::serialize(std::string & serialization, int const spacing) const {
     json node = json::object();
-    if (this -> submodels.size() == 0) {
-         // Later need to cast this to num if possible
-        if (test_integral(this -> prediction)) {
-            node["prediction"] = atoi(this -> prediction.c_str());
-        } else if (test_rational(this -> prediction)) {
-            node["prediction"] = atof(this -> prediction.c_str());
-        } else {
-            node["prediction"] = this -> prediction;
-        }
-        node["name"] = this -> feature_name;
-        node["loss"] = this -> loss;
-        node["complexity"] = this -> complexity;
+    to_json(node);
+    serialization = spacing == 0 ? node.dump() : node.dump(spacing);
+    return;
+}
+
+void Model::to_json(json & node) const {
+    _to_json(node);
+    decode_json(node);
+}
+
+void Model::_to_json(json & node) const {
+    if (this -> terminal) {
+        node["prediction"] = this -> binary_target;
+        node["loss"] = this -> _loss; // This value is correct regardless of translation
+        node["complexity"] = Configuration::regularization;
     } else {
-        node["feature"] = this -> feature;
-        node["name"] = this -> feature_name;
-        node["relation"] = this -> relation;
-        if (test_integral(this -> reference)) {
-            node["reference"] = atoi(this -> reference.c_str());
-        } else if (test_rational(this -> reference)) {
-            node["reference"] = atof(this -> reference.c_str());
-        } else {
-            node["reference"] = this -> reference;
+        node["feature"] = this -> binary_feature;
+        node["false"] = json::object();
+        node["true"] = json::object();
+        this -> negative -> _to_json(node["false"]);
+        this -> positive -> _to_json(node["true"]);
+
+        if (this -> negative_translator.size() > 0) {
+            translate_json(node["false"],  this -> negative -> self_translator, this -> negative_translator);
         }
-        std::map< bool, Model > const & submodel_map = this -> submodels;
-        for (auto iterator = submodel_map.begin(); iterator != submodel_map.end(); ++iterator) {
-            std::string key = iterator -> first ? "true" : "false";
-            node[key] = (iterator -> second).to_json();
+        if (this -> positive_translator.size() > 0) {
+            translate_json(node["true"],  this -> positive -> self_translator, this -> positive_translator);
         }
     }
-    return node;
+    return;
+}
+
+void Model::translate_json(json & node, translation_type const & main, translation_type const & alternative) const {
+    if (node.contains("prediction")) {
+        // index translation to undo any reordering from tile normalization
+        int cannonical_index = (int)(node["prediction"]) + State::dataset.width();
+        int normal_index = std::distance(main.begin(), std::find(main.begin(), main.end(), cannonical_index));
+        int alternative_index = (int)(alternative.at(normal_index)) - State::dataset.width();
+
+        node["prediction"] = alternative_index;
+    } else if (node.contains("feature")) {
+        // index translation to undo any reordering from tile normalization
+        bool flip = false;
+        int cannonical_index = node["feature"];
+        int normal_index;
+        if (std::find(main.begin(), main.end(), cannonical_index) != main.end()) {
+            normal_index = std::distance(main.begin(), std::find(main.begin(), main.end(), cannonical_index));
+        } else if (std::find(main.begin(), main.end(), -cannonical_index) != main.end()) {
+            normal_index = std::distance(main.begin(), std::find(main.begin(), main.end(), -cannonical_index));
+            flip = !flip;
+        }
+        int alternative_index = alternative.at(normal_index);
+        if (alternative_index < 0) { flip = !flip; }
+
+        node["feature"] = std::abs(alternative_index);
+        translate_json(node["false"], main, alternative);
+        translate_json(node["true"], main, alternative);
+        if (flip) {
+            node["swap"] = node["true"];
+            node["true"] = node["false"];
+            node["false"] = node["swap"];
+            node.erase("swap");
+        }
+    }
+    return;
+}
+
+
+void Model::decode_json(json & node) const {
+    if (node.contains("prediction")) {
+        std::string prediction_name, prediction_value;
+        State::dataset.encoder.target_value(node["prediction"], prediction_value);
+        State::dataset.encoder.header(prediction_name);
+
+        if (Encoder::test_integral(prediction_value)) {
+            node["prediction"] = atoi(prediction_value.c_str());
+        } else if (Encoder::test_rational(prediction_value)) {
+            node["prediction"] = atof(prediction_value.c_str());
+        } else {
+            node["prediction"] = prediction_value;
+        }
+        node["name"] = prediction_name;
+    } else if (node.contains("feature")) {
+        // index decoding from binary feature to original feature space
+        unsigned int binary_feature_index = node["feature"];
+        unsigned int feature_index;
+        std::string feature_name, feature_type, relation, reference;
+        State::dataset.encoder.decode(binary_feature_index, & feature_index);
+        State::dataset.encoder.encoding(binary_feature_index, feature_type, relation, reference);
+        State::dataset.encoder.header(feature_index, feature_name);
+
+        node["feature"] = feature_index;
+        node["name"] = feature_name;
+        node["relation"] = relation;
+        if (Encoder::test_integral(reference)) {
+            node["reference"] = atoi(reference.c_str());
+        } else if (Encoder::test_rational(reference)) {
+            node["reference"] = atof(reference.c_str());
+        } else {
+            node["reference"] = reference;
+        }
+
+        decode_json(node["false"]);
+        decode_json(node["true"]);
+    }
+
+    return;
 }

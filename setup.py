@@ -25,13 +25,15 @@ if platform.system() == "Darwin":
     STDLIB = ['-stdlib=libc++']
     TBB_LIBS = ['-ltbb', '-ltbbmalloc']
     CL_LIBS = ['-framework', 'OpenCL']
+    GMP_LIBS = ['-lgmp']
 elif platform.system() == "Linux":
     STDLIB = []
     TBB_LIBS = ['-ltbb', '-ltbbmalloc']
     CL_LIBS = ['-lOpenCL']
+    GMP_LIBS = ['-lgmp']
 
 COMPILE_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB
-LINK_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB + TBB_LIBS + CL_LIBS
+LINK_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB + TBB_LIBS + CL_LIBS + GMP_LIBS
 
 module = Extension(
     name='gosdt',

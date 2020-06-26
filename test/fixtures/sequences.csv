@@ -1,0 +1,8 @@
+redundant,optional,bin,enum,str,int,float,path
+x,null,yes,1,alpha,0,0.0,xnullyes1alpha00.0
+x,notnull,no,2,beta,1,0.123456789,xnotnullno2beta10.123456789
+x,nontrivial,yes,3,gamma,-2,-999999.9999999,xnullyes3gamma-2-999999.9999999
+x,,no,4,delta,3,192875.1024875,xno4delta3192875.1024875
+x,NA,yes,1,epsilon,-4,0,xNAyes1epsilon-40
+x,Null,no,2,zeta,5,918273645.564738291,xNullno2zeta5918273645.564738291
+x,NaN,yes,3,eta,6,1121121121211.3,xNaNyes3eta61121121121211.3

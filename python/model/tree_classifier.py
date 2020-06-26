@@ -5,6 +5,7 @@ from numpy import array
 from operator import add, eq, ge
 from sklearn.metrics import confusion_matrix, accuracy_score, balanced_accuracy_score
 
+# Supporting Override for Converting Numpy Types into Python Values
 class NumpyEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -16,27 +17,49 @@ class NumpyEncoder(JSONEncoder):
         else:
             return super(NumpyEncoder, self).default(obj)
 
-class TreeClassifier:
-    def __init__(self, source, encoder=None, X=None, y=None):
-        self.source = source
-        self.encoder = encoder
-        if not X is None and not y is None:
-            self.__initialize_loss__(X, y)
 
-    def __initialize_loss__(self, X, y):
+class TreeClassifier:
+    """
+    Unified representation of a tree classifier in Python
+
+    This class accepts a dictionary representation of a tree classifier and decodes it into an interactive object
+
+    Additional support for encoding/decoding layer can be layers if the feature-space of the model differs from the feature space of the original data
+    """
+    def __init__(self, source, encoder=None, X=None, y=None):
+        self.source = source # The classifier stored in a recursive dictionary structure
+        self.encoder = encoder # Optional encoder / decoder unit to run before / after prediction
+        if not X is None and not y is None: # Original training features and labels to fill in missing training loss values
+            self.__initialize_training_loss__(X, y)
+
+    
+    def __initialize_training_loss__(self, X, y):
+        """
+        Compares every prediction y_hat against the labels y, then incorporates the misprediction into the stored loss values
+        This is used when parsing models from an algorithm that doesn't provide the training loss in the out put
+        """
+        for node in self.__all_leaves__():
+            node["loss"] = 0.0
         (n, m) = X.shape
         for i in range(n):
-            self.__initialize_sample_loss__(X.values[i,:], y.values[i,-1], 1/n, self.source)
+            node = self.__find_leaf__(X.values[i,:])
+            label = y.values[i,-1]
+            weight = 1 / n
+            if node["prediction"] != label:
+                node["loss"] += weight
         return
 
-    def __initialize_sample_loss__(self, sample, label, weight, root):
-        distribution = {}
-        nodes = [root]
+    def __find_leaf__(self, sample):
+        """
+        Returns
+        ---
+        the leaf by which this sample would be classified        
+        """
+        nodes = [self.source]
         while len(nodes) > 0:
             node = nodes.pop()
             if "prediction" in node:
-                if node["prediction"] != label:
-                    node["loss"] += weight
+                return node
             else:
                 value = sample[node["feature"]]
                 reference = node["reference"]
@@ -68,92 +91,335 @@ class TreeClassifier:
                 else:
                     raise "Unsupported relational operator {}".format(node["relation"])
 
-    def loss(self, root):
-        loss_value = 0.0
-        nodes = [root]
+    def __all_leaves__(self):
+        """
+        Returns
+        ---
+        list : a list of all leaves in this model
+        """
+        nodes = [self.source]
+        leaf_list = []
         while len(nodes) > 0:
             node = nodes.pop()
             if "prediction" in node:
-                loss_value += node["loss"]
+                leaf_list.append(node)
             else:
                 nodes.append(node["true"])
                 nodes.append(node["false"])
-        return loss_value
+        return leaf_list
 
-    def classify(self, sample, root):
-        distribution = {}
-        nodes = [root]
-        while len(nodes) > 0:
-            node = nodes.pop()
-            if "prediction" in node:
-                return node["prediction"], 1 - node["loss"]
-            else:
-                value = sample[node["feature"]]
-                reference = node["reference"]
-                if node["relation"] == "==":
-                    if value == reference:
-                        nodes.append(node["true"])
-                    else:
-                        nodes.append(node["false"])
-                elif node["relation"] == ">=":
-                    if value >= reference:
-                        nodes.append(node["true"])
-                    else:
-                        nodes.append(node["false"])
-                elif node["relation"] == "<=":
-                    if value <= reference:
-                        nodes.append(node["true"])
-                    else:
-                        nodes.append(node["false"])
-                elif node["relation"] == ">":
-                    if value > reference:
-                        nodes.append(node["true"])
-                    else:
-                        nodes.append(node["false"])
-                elif node["relation"] == "<":
-                    if value < reference:
-                        nodes.append(node["true"])
-                    else:
-                        nodes.append(node["false"])
-                else:
-                    raise "Unsupported relational operator {}".format(node["relation"])
+
+    def loss(self):
+        """
+        Returns
+        ---
+        real number : values between [0,1]
+            the training loss of this model
+        """
+        return sum( node["loss"] for node in self.__all_leaves__() )
+
+    def classify(self, sample):
+        """
+        Parameters
+        ---
+        sample : array-like, shape = [m_features]
+            a 1-by-m row representing each feature of a single sample
+
+        Returns
+        ---
+        string : the prediction for a given sample and conditional probability (given the observations along the decision path) of it being correct
+        """
+        node = self.__find_leaf__(sample)
+        return node["prediction"], 1 - node["loss"]
 
     def predict(self, X):
-        if not self.encoder is None:
+        """
+        Requires
+        ---
+        the set of features used should be pre-encoding if an encoder is used
+
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            a matrix where each row is a sample to be predicted and each column is a feature to be used for prediction
+
+        Returns
+        ---
+        array-like, shape = [n_sampels by 1] : a column where each element is the prediction associated with each row
+        """
+        if not self.encoder is None: # Perform an encoding if an encoding unit is specified
             X = pd.DataFrame(self.encoder.encode(X.values[:,:]), columns=self.encoder.headers)
         
         predictions = []
         (n, m) = X.shape
         for i in range(n):
-            prediction, confidence = self.classify(X.values[i,:], self.source)
+            prediction, _ = self.classify(X.values[i,:])
             predictions.append(prediction)
         return array(predictions)
 
     def confidence(self, X):
+        """
+        Requires
+        ---
+        the set of features used should be pre-encoding if an encoder is used
+
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            a matrix where each row is a sample to be predicted and each column is a feature to be used for prediction
+
+        Returns
+        ---
+        array-like, shape = [n_samples by 1] : a column where each element is the conditional probability of each prediction (conditioned only on the features that were used in prediction)
+        """
         if not self.encoder is None:
             X = pd.DataFrame(self.encoder.encode(X.values[:,:]), columns=self.encoder.headers)
-        
-        predictions = []
+
+        conditional_probabilities = []
         (n, m) = X.shape
         for i in range(n):
-            prediction, confidence = self.classify(X.values[i,:])
-            predictions.append(confidence)
-        return array(predictions)
-        
+            _, conditional_probability = self.classify(X.values[i,:])
+            conditional_probabilities.append(conditional_probability)
+        return array(conditional_probabilities)
+    
+    
     def error(self, X, y, weight=None):
+        """
+        Parameters
+        --- 
+        X : matrix-like, shape = [n_samples by m_features]
+            an n-by-m matrix of sample and their features
+        y : array-like, shape = [n_samples by 1]
+            an n-by-1 column of labels associated with each sample
+        weight : real number
+            an n-by-1 column of weights to apply to each sample's misclassification
+
+        Returns
+        ---
+        real number : the inaccuracy produced by applying this model overthe given dataset, with optionals for weighted inaccuracy
+        """
         return 1 - self.score(X, y, weight=weight)
 
+    
     def score(self, X, y, weight=None):
+        """
+        Parameters
+        --- 
+        X : matrix-like, shape = [n_samples by m_features]
+            an n-by-m matrix of sample and their features
+        y : array-like, shape = [n_samples by 1]
+            an n-by-1 column of labels associated with each sample
+        weight : real number
+            an n-by-1 column of weights to apply to each sample's misclassification
+
+        Returns
+        ---
+        real number : the accuracy produced by applying this model overthe given dataset, with optionals for weighted accuracy
+        """
         y_hat = self.predict(X)
         if weight == "balanced":
             return balanced_accuracy_score(y, y_hat)
         else:
             return accuracy_score(y, y_hat, normalize=True, sample_weight=weight)
-
+    
     def confusion(self, X, y, weight=None):
-        return confusion_matrix(y_test, y_pred, sample_weight=weight)
+        """
+        Parameters
+        --- 
+        X : matrix-like, shape = [n_samples by m_features]
+            an n-by-m matrix of sample and their features
+        y : array-like, shape = [n_samples by 1]
+            an n-by-1 column of labels associated with each sample
+        weight : real number
+            an n-by-1 column of weights to apply to each sample's misclassification
 
-    def groups_helper(self, node):
+        Returns
+        ---
+        matrix-like, shape = [k_classes by k_classes] : the confusion matrix of all classes present in the dataset
+        """
+        return confusion_matrix(y, self.predict(X, y, weight), sample_weight=weight)
+
+    def __len__(self):
+        """
+        Returns
+        ---
+        natural number : The number of terminal nodes present in this tree
+        """
+        return self.leaves()
+
+    def leaves(self):
+        """
+        Returns
+        ---
+        natural number : The number of terminal nodes present in this tree
+        """
+        leaves_counter = 0
+        nodes = [self.source]
+        while len(nodes) > 0:
+            node = nodes.pop()
+            if "prediction" in node:
+                leaves_counter += 1
+            else:
+                nodes.append(node["true"])
+                nodes.append(node["false"])
+        return leaves_counter
+    
+    def nodes(self):
+        """
+        Returns
+        ---
+        natural number : The number of nodes present in this tree
+        """
+        nodes_counter = 0
+        nodes = [self.source]
+        while len(nodes) > 0:
+            node = nodes.pop()
+            if "prediction" in node:
+                nodes_counter += 1
+            else:
+                nodes_counter += 1
+                nodes.append(node["true"])
+                nodes.append(node["false"])
+        return nodes_counter
+
+
+    def features(self):
+        """
+        Returns
+        ---
+        set : A set of strings each describing the features used by this model
+        """
+        feature_set = set()
+        nodes = [self.source]
+        while len(nodes) > 0:
+            node = nodes.pop()
+            if "prediction" in node:
+                continue
+            else:
+                feature_set.add(node["name"])
+                nodes.append(node["true"])
+                nodes.append(node["false"])
+        return feature_set 
+
+    def encoded_features(self):
+        """
+        Returns
+        ---
+        natural number : The number of encoded features used by the supplied encoder to represent the data set
+        """
+        return len(self.encoder.headers) if not self.encoder is None else None
+
+    def maximum_depth(self, node=None):
+        """
+        Returns
+        ---
+        natural number : the length of the longest decision path in this tree. A single-node tree will return 1.
+        """
+        if node is None:
+            node = self.source
+        if "prediction" in node:
+            return 1
+        else:
+            return 1 + max(self.maximum_depth(node["true"]), self.maximum_depth(node["false"]))
+
+    def __str__(self):
+        """
+        Returns
+        ---
+        string : pseuodocode representing the logic of this classifier
+        """
+        cases = []
+        for group in self.__groups__():
+            predicates = []
+            for name in sorted(group["rules"].keys()):
+                domain = group["rules"][name]
+                if domain["type"] == "Categorical":
+                    if len(domain["positive"]) > 0:
+                        predicates.append("{} = {}".format(name, list(domain["positive"])[0]))
+                    elif len(domain["negative"]) > 0:
+                        if len(domain["negative"]) > 1:
+                            predicates.append("{} not in {{ {} }}".format(name, ", ".join([ str(v) for v in domain["negative"] ])) )
+                        else:
+                            predicates.append("{} != {}".format(name, str(list(domain["negative"])[0])))
+                    else:
+                        raise "Invalid Rule"
+                elif domain["type"] == "Numerical":
+                    predicate = name
+                    if domain["min"] != -float("INF"):
+                        predicate = "{} <= ".format(domain["min"]) + predicate
+                    if domain["max"] != float("INF"):
+                        predicate = predicate + " < {}".format(domain["max"])
+                    predicates.append(predicate)
+            
+            if len(predicates) == 0:
+                condition = "if true then:"
+            else:
+                condition = "if {} then:".format(" and ".join(predicates))
+            outcomes = []
+            # for outcome, probability in group["distribution"].items():
+            outcomes.append("    predicted {}: {}".format(group["name"], group["prediction"]))
+            outcomes.append("    misclassification penalty: {}".format(round(group["loss"], 3)))
+            outcomes.append("    complexity penalty: {}".format(round(group["complexity"], 3)))
+            result = "\n".join(outcomes)
+            cases.append("{}\n{}".format(condition, result))
+        return "\n\nelse ".join(cases)
+    
+    def __repr__(self):
+        """
+        Returns
+        ---
+        dictionary : The recursive dictionary used to represent the model
+        """
+        return self.source
+
+    def latex(self, node=None):
+        """
+        Note
+        ---
+        This method doesn't work well for label headers that contain underscores due to underscore being a reserved character in LaTeX
+
+        Returns
+        ---
+        string : A LaTeX string representing the model
+        """
+        if node is None:
+            node = self.source
+        if "prediction" in node:
+            if "name" in node:
+                name = node["name"]
+            else:
+                name = "feature_{}".format(node["feature"])
+            return "[ ${}$ [ ${}$ ] ]".format(name, node["prediction"])
+        else:
+            if "name" in node:
+                if "=" in node["name"]:
+                    name = "{}".format(node["name"])
+                else:
+                    name = "{} {} {}".format(node["name"], node["relation"], node["reference"])
+            else:
+                name = "feature_{} {} {}".format(node["feature"], node["relation"], node["reference"])
+            return "[ ${}$ {} {} ]".format(name, self.__latex__(node["true"]), self.__latex__(node["false"])).replace("==", " \eq ").replace(">=", " \ge ").replace("<=", " \le ")
+
+    def json(self):
+        """
+        Returns
+        ---
+        string : A JSON string representing the model
+        """
+        return dumps(self.source, cls=NumpyEncoder)
+
+
+    def __groups__(self, node=None):
+        """
+        Parameters
+        --- 
+        node : node within the tree from which to start
+        Returns
+        ---
+        list : Object representation of each leaf for conversion to a case in an if-then-else statement
+        """
+        if node is None:
+            node = self.source
         if "prediction" in node:
             node["rules"] = {}
             groups = [node]
@@ -167,7 +433,7 @@ class TreeClassifier:
             groups = []
             for condition_result in ["true", "false"]:
                 subtree = node[condition_result]
-                for group in self.groups_helper(subtree):
+                for group in self.__groups__(subtree):
 
                     # For each group, add the corresponding rule
                     rules = group["rules"]
@@ -203,210 +469,4 @@ class TreeClassifier:
                     
                     # Add the modified group to the group list
                     groups.append(group)
-            return groups    
-
-    def groups(self):
-        aggregated_groups = self.groups_helper(self.source)
-        return aggregated_groups
-
-    def __str__(self):
-        cases = []
-        for group in self.groups():
-            predicates = []
-            for name in sorted(group["rules"].keys()):
-                domain = group["rules"][name]
-                if domain["type"] == "Categorical":
-                    if len(domain["positive"]) > 0:
-                        predicates.append("{} = {}".format(name, list(domain["positive"])[0]))
-                    elif len(domain["negative"]) > 0:
-                        predicates.append("{} not in {{ {} }}".format(name, ", ".join([ str(v) for v in domain["negative"] ])) )
-                    else:
-                        raise "Invalid Rule"
-                elif domain["type"] == "Numerical":
-                    predicate = name
-                    if domain["min"] != -float("INF"):
-                        predicate = "{} <= ".format(domain["min"]) + predicate
-                    if domain["max"] != float("INF"):
-                        predicate = predicate + " < {}".format(domain["max"])
-                    predicates.append(predicate)
-            
-            if len(predicates) == 0:
-                condition = "if true then:"
-            else:
-                condition = "if {} then:".format(" and ".join(predicates))
-            outcomes = []
-            # for outcome, probability in group["distribution"].items():
-            outcomes.append("    predicted {}: {}".format(group["name"], group["prediction"]))
-            outcomes.append("    misclassification penalty: {}".format(round(group["loss"], 3)))
-            outcomes.append("    complexity penalty: {}".format(round(group["complexity"], 3)))
-            result = "\n".join(outcomes)
-            cases.append("{}\n{}".format(condition, result))
-        return "\n\nelse ".join(cases)
-    
-    def __repr__(self):
-        return self.source
-
-    def __latex__(self, node):
-        if "prediction" in node:
-            if "name" in node:
-                name = node["name"]
-            else:
-                name = "feature_{}".format(node["feature"])
-            return "[ ${}$ [ ${}$ ] ]".format(name, node["prediction"])
-        else:
-            if "name" in node:
-                if "=" in node["name"]:
-                    name = "{}".format(node["name"])
-                else:
-                    name = "{} {} {}".format(node["name"], node["relation"], node["reference"])
-            else:
-                name = "feature_{} {} {}".format(node["feature"], node["relation"], node["reference"])
-            return "[ ${}$ {} {} ]".format(name, self.__latex__(node["true"]), self.__latex__(node["false"])).replace("==", " \eq ").replace(">=", " \ge ").replace("<=", " \le ")
-
-    def latex(self):
-        return self.__latex__(self.source)
-    
-    def json(self):
-        return dumps(self.source, cls=NumpyEncoder)
-
-    def leaves(self):
-        leaves_counter = 0
-        nodes = [self.source]
-        while len(nodes) > 0:
-            node = nodes.pop()
-            if "prediction" in node:
-                leaves_counter += 1
-            else:
-                nodes.append(node["true"])
-                nodes.append(node["false"])
-        return leaves_counter
-    
-    def nodes(self):
-        nodes_counter = 0
-        nodes = [self.source]
-        while len(nodes) > 0:
-            node = nodes.pop()
-            if "prediction" in node:
-                nodes_counter += 1
-            else:
-                nodes_counter += 1
-                nodes.append(node["true"])
-                nodes.append(node["false"])
-        return nodes_counter
-
-    def __len__(self):
-        return self.leaves()
-
-    def features(self):
-        feature_set = set()
-        nodes = [self.source]
-        while len(nodes) > 0:
-            node = nodes.pop()
-            if "prediction" in node:
-                continue
-            else:
-                feature_set.add(node["name"])
-                nodes.append(node["true"])
-                nodes.append(node["false"])
-        return feature_set 
-
-    def binary_features(self):
-        return len(self.encoder.headers)
-
-    def regularization_upperbound(self, X, y):
-        if not self.encoder is None:
-            X = pd.DataFrame(self.encoder.encode(X.values[:,:]), columns=self.encoder.headers)
-        X.insert(X.shape[1], "class", y)
-        regularization = 1.0
-        min_acc_increase = self.minimum_accuracy_increase(X, self.source)
-        min_leaf_accuracy = self.minimum_leaf_accuracy(self.source)
-        max_depth = self.maximum_depth(self.source)
-        leaf_count = self.leaves()
-        # regularization = min(min_acc_increase, regularization)
-        regularization = min(min_leaf_accuracy, regularization)
-        regularization = min(1 / max_depth, regularization)
-        regularization = min(1 / (2 * leaf_count), regularization)
-        if regularization < 0:
-            print("Inferring Regularizer: MAI: {}, MLA: {}, MD: {}, LC: {}".format(min_acc_increase, min_leaf_accuracy, max_depth, leaf_count))
-        return regularization
-
-
-    def maximum_depth(self, node=None):
-        if node is None:
-            node = self.source
-        if "prediction" in node:
-            return 1
-        else:
-            return 1 + max(self.maximum_depth(node["true"]), self.maximum_depth(node["false"]))
-
-
-    def minimum_leaf_accuracy(self, node):
-        if "prediction" in node:
-            return 1 - node["loss"]
-        else:
-            return min(self.minimum_leaf_accuracy(node["true"]), self.minimum_leaf_accuracy(node["false"]))
-
-    def minimum_accuracy_increase(self, dataset, node):
-        distribution = {}
-        accuracy_increase = 0
-        if "prediction" in node:
-            return 0
-        else:
-            (n,_) = dataset.shape
-            distribution = dict()
-            for i in range(n):
-                target = dataset.iloc[i,-1]
-                if not target in distribution:
-                    distribution[target] = 1 / n
-                else:
-                    distribution[target] += 1 / n
-            baseline_prediction = None
-            baseline_likelihood = 0
-            for target, likelihood in distribution.items():
-                if likelihood > baseline_likelihood:
-                    baseline_likelihood = likelihood
-                    baseline_prediction = target
-
-            split_likelihood = 1 - (self.loss(node["true"]) + self.loss(node["false"]))
-            accuracy_increase = split_likelihood - baseline_likelihood
-            # print("Baseline Accuracy: {}, Split Accuracy: {}".format(baseline_likelihood, split_likelihood))
-
-            reference = node["reference"]
-            if node["relation"] == "==":
-                if not "prediction" in node["true"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]==reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["true"]))
-                if not "prediction" in node["false"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]!=reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["false"]))
-            elif node["relation"] == ">=":
-                if not "prediction" in node["true"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]>=reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["true"]))
-                if not "prediction" in node["false"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]<reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["false"]))
-            elif node["relation"] == "<=":
-                if not "prediction" in node["true"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]<=reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["true"]))
-                if not "prediction" in node["false"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]>reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["false"]))
-            elif node["relation"] == ">":
-                if not "prediction" in node["true"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]>reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["true"]))
-                if not "prediction" in node["false"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]<=reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["false"]))
-            elif node["relation"] == "<":
-                if not "prediction" in node["true"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]<reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["true"]))
-                if not "prediction" in node["false"]:
-                    subset = dataset[dataset[dataset.columns[node["feature"]]]>=reference]
-                    accuracy_increase = min(accuracy_increase, self.minimum_accuracy_increase(subset, node["false"]))
-            else:
-                raise "Unsupported relational operator {}".format(node["relation"])
-        return accuracy_increase
+            return groups

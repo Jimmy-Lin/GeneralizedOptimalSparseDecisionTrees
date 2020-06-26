@@ -1,0 +1,20 @@
+[
+  {
+    "false": {
+      "complexity": 0.05000000074505806,
+      "loss": 0.046666666865348816,
+      "name": "class",
+      "prediction": 1
+    },
+    "feature": 0,
+    "name": "sepal_length",
+    "reference": 5.45,
+    "relation": ">=",
+    "true": {
+      "complexity": 0.05000000074505806,
+      "loss": 0.03333333507180214,
+      "name": "class",
+      "prediction": 0
+    }
+  }
+]

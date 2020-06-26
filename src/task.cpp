@@ -1,147 +1,284 @@
-#include <iostream>
-#include <limits>
-
 #include "task.hpp"
 
 Task::Task(void) {}
 
-Task::Task(float const lowerbound, float const upperbound, float const support, float base_objective)
- : _support(support),
-  _lowerbound(lowerbound), _upperbound(upperbound),
-  _potential(upperbound - lowerbound), _base_objective(base_objective) {
-    float const epsilon = std::numeric_limits<float>::epsilon();    
-    if (lowerbound - upperbound > epsilon) {
-        std::cout << "Invalid Task(" << lowerbound << ", " << upperbound << ")" << std::endl;
-        throw "Invalid Task Initialization";
-    }
-}
+Task::Task(Bitmask const & capture_set, Bitmask const & feature_set, unsigned int id) {
+    this -> _capture_set = capture_set;
+    this -> _feature_set = feature_set;
+    this -> _support = (float)(capture_set.count()) / (float)(State::dataset.height());
+    float const regularization = Configuration::regularization;
+    bool terminal = (this -> _capture_set.count() <= 1) || (this -> _feature_set.empty());
 
-Task::Task(float const lowerbound, float const upperbound, float const support, float base_objective, Bitmask const & sensitivity, similarity_index_table_type const & index)
- : _support(support),
-  _lowerbound(lowerbound), _upperbound(upperbound),
-  _potential(upperbound - lowerbound), _base_objective(base_objective),
-  _sensitivity(sensitivity), similarity_index(index) {
-    float const epsilon = std::numeric_limits<float>::epsilon();    
-    if (lowerbound - upperbound > epsilon) {
-        std::cout << "Invalid Task(" << lowerbound << ", " << upperbound << ")" << std::endl;
-        throw "Invalid Task Initialization";
-    }
-}
+    float potential, min_loss, max_loss;
+    unsigned int target_index;
+    // Careful, the following method modifies capture_set
+    State::dataset.summary(this -> _capture_set, this -> _information, potential, min_loss, max_loss, target_index, id);
 
-float const Task::support(void) const {
-    return this -> _support;
-}
+    this -> _base_objective = max_loss + regularization;
+    // Add lambda because we know this has at least 2 leaves
+    float const lowerbound = std::min(this -> _base_objective, min_loss + 2 * regularization);
+    float const upperbound = this -> _base_objective;
 
-float const Task::lowerbound(void) const {
-    return this -> _lowerbound;
-}
-
-float const Task::upperbound(void) const {
-    return this -> _upperbound;
-}
-
-float const Task::potential(void) const {
-    return this -> _potential;
-}
-
-float const Task::uncertainty(void) const {
-    float const epsilon = std::numeric_limits<float>::epsilon();
-    if (upperbound() - lowerbound() > epsilon) {
-        return upperbound() - lowerbound();
+    if ( (1.0 - min_loss < regularization ) // Insufficient maximum accuracy
+        || ( potential < 2 * regularization && (1.0 - max_loss) < regularization) ) // Leaf Support + Incremental Accuracy
+    { // Insufficient support and leaf accuracy
+        // Node is provably not part of any optimal tree
+        this -> _lowerbound = this -> _base_objective;
+        this -> _upperbound = this -> _base_objective;
+        this -> _feature_set.clear();
+    } else if (
+        max_loss - min_loss < regularization // Accuracy
+        || potential < 2 * regularization // Leaf Support
+        || terminal
+    ) {
+        // Node is provably not an internal node of any optimal tree
+        this -> _lowerbound = this -> _base_objective;
+        this -> _upperbound = this -> _base_objective;
+        this -> _feature_set.clear();
+        
     } else {
-        return 0.0;
+        // Node can be either an internal node or leaf
+        this -> _lowerbound = lowerbound;
+        this -> _upperbound = upperbound;
+    }
+
+    if (this -> _lowerbound > this -> _upperbound) {
+        std::stringstream reason;
+        reason << "Invalid Lowerbound (" << this -> _lowerbound << ") or Upperbound (" << this -> _upperbound << ")." << std::endl;
+        throw IntegrityViolation("Task::Task", reason.str());
     }
 }
 
-float const Task::objective(void) const {
-    if (uncertainty() != 0) { throw "Cannot determine objective from task with non-zero uncertainty."; }
-    return upperbound();
+float Task::support(void) const { return this -> _support; }
+
+float Task::information(void) const { return this -> _information; }
+
+float Task::base_objective(void) const { return this -> _base_objective; }
+
+float Task::uncertainty(void) const { return std::max((float)(0.0), upperbound() - lowerbound()); }
+
+float Task::lowerbound(void) const { return this -> _lowerbound; }
+float Task::upperbound(void) const { return this -> _upperbound; }
+float Task::lowerscope(void) const { return this -> _lowerscope; }
+float Task::upperscope(void) const { return this -> _upperscope; }
+
+Bitmask const & Task::capture_set(void) const { return this -> _capture_set; }
+Bitmask const & Task::feature_set(void) const { return this -> _feature_set; }
+Tile & Task::identifier(void) { return this -> _identifier; }
+std::vector<int> & Task::order(void) { return this -> _order; }
+
+void Task::scope(float new_scope) {
+    if (new_scope == 0) { return; }
+    new_scope = std::max((float)(0.0), new_scope);
+    this -> _upperscope = this -> _upperscope == std::numeric_limits<float>::max() ? new_scope : std::max(this -> _upperscope, new_scope);
+    this -> _lowerscope = this -> _lowerscope == -std::numeric_limits<float>::max() ? new_scope : std::min(this -> _lowerscope, new_scope);
 }
 
-float const Task::base_objective(void) const {
-    return this -> _base_objective;
-}
+void Task::prune_feature(unsigned int index) { this -> _feature_set.set(index, false); }
 
-float const Task::scope(void) const {
-    return this -> _scope;
-}
-
-void Task::rescope(float scope_value) {
-    this -> _scope = scope_value;
-}
-
-Bitmask const & Task::sensitivity(void) const {
-    return this -> _sensitivity;
-}
-bool const Task::sensitive(int const index) const {
-    return this -> _sensitivity[index] == 1;
-}
-void Task::desensitize(int const index) {
-    this -> _sensitivity.set(index, false);
-    return;
-}
-
-float const Task::priority(float const optimism) const {
-    return 1.0 - ( optimism * lowerbound() + (1 - optimism) * upperbound() ) / support();
-}
+void Task::create_children(unsigned int id) {    
+    this -> _lowerbound = this -> _base_objective;
+    this -> _upperbound = this -> _base_objective;
+    Bitmask & buffer = State::locals[id].columns[0];
+    bool conditions[2] = {false, true};
+    Bitmask const & features = this -> _feature_set;
+    for (int j_begin = 0, j_end = 0; features.scan_range(true, j_begin, j_end); j_begin = j_end) {
+        for (int j = j_begin; j < j_end; ++j) {
+            bool skip = false;
+            for (unsigned int k = 0; k < 2; ++k) {
+                buffer = this -> _capture_set;
+                State::dataset.subset(j, conditions[k], buffer);
+                if (buffer.empty() || buffer == this -> _capture_set) { skip = true; continue; }
+                Task child(buffer, this -> _feature_set, id);
+                State::locals[id].neighbourhood[2 * j + k] = child;
+            }
+            if (skip) { prune_feature(j); }
 
 
-void Task::inform(float const proposed_lowerbound, float const proposed_upperbound) {
-    float const epsilon = std::numeric_limits<float>::epsilon();
-    float lowerbound = std::max(this -> _lowerbound, proposed_lowerbound);
-    float upperbound = std::min(this -> _upperbound, proposed_upperbound);
-    if (lowerbound - upperbound > epsilon) {
-        // std::cout << "Invalid Task::inform (" << this -> _lowerbound << ", " << this -> _upperbound << ") => (" << lowerbound << ", " << upperbound << ")" << std::endl;
-        throw "Invalid Lower or Upper Bound Update to Task Instance.";
+            // Task & left = State::locals[id].neighbourhood[2 * j];
+            // Task & right = State::locals[id].neighbourhood[2 * j + 1];
+
+        }
     }
-    this -> _lowerbound = lowerbound;
-    this -> _upperbound = upperbound;
-    return;
 }
 
-bool const Task::explored(void) const {
-    return this -> _explored;
-}
-bool const Task::delegated(void) const {
-    return this -> _delegated;
-}
-bool const Task::cancelled(void) const {
-    return this -> _cancelled;
-}
-bool const Task::resolved(void) const {
-    return this -> _resolved;
+void Task::prune_features(unsigned int id) {
+    if (Configuration::continuous_feature_exchange) { continuous_feature_exchange(id); }
+    if (Configuration::feature_exchange) { feature_exchange(id); }
+
+    this -> _lowerbound = this -> _base_objective;
+    this -> _upperbound = this -> _base_objective;
+    Bitmask & buffer = State::locals[id].columns[0];
+    bool conditions[2] = {false, true};
+    Bitmask const & features = this -> _feature_set;
+    for (int j_begin = 0, j_end = 0; features.scan_range(true, j_begin, j_end); j_begin = j_end) {
+        for (int j = j_begin; j < j_end; ++j) {
+            float lower = 0.0, upper = 0.0;
+            
+            Task & left = State::locals[id].neighbourhood[2 * j];
+            Task & right = State::locals[id].neighbourhood[2 * j + 1];
+
+            if (Configuration::rule_list) {
+                float lower_negative = left.base_objective() + right.lowerbound();
+                float lower_positive = left.lowerbound() + right.base_objective();
+                lower = std::min(lower_negative, lower_positive);
+                float upper_negative = left.base_objective() + right.upperbound();
+                float upper_positive = left.upperbound() + right.base_objective();
+                upper = std::min(upper_negative, upper_positive);
+            } else {
+                lower = left.lowerbound() + right.lowerbound();
+                upper = left.upperbound() + right.upperbound();
+            }
+
+            // std::cout << "Split: " << j << ", Bound: [" << left.lowerbound() << " + " << right.lowerbound()  << ", " << left.upperbound() << " + " << right.upperbound() << "]" << std::endl;
+            // std::cout << "Split: " << j << ", Bound: [" << lower  << ", " << upper << "]" << std::endl;
+
+            if (lower > this -> _upperscope) { continue; }
+            if (upper < this -> _upperbound) { this -> _optimal_feature = j; }
+            this -> _lowerbound = std::min(this -> _lowerbound, lower);
+            this -> _upperbound = std::min(this -> _upperbound, upper);
+        }
+    }
 }
 
-void Task::explore(void) {
-    if (cancelled() || resolved()) {
-        std::cout << "Called explore on task.cancelled == " << cancelled() << ", task.resolved == " << resolved() << std::endl;
-        throw "Illegal task state transition.";
+void Task::continuous_feature_exchange(unsigned int id) {
+    Bitmask const & features = this -> _feature_set;
+    for (auto it = State::dataset.encoder.boundaries.begin(); it != State::dataset.encoder.boundaries.end(); ++it) {
+        int start = it -> first, finish = it -> second;
+        for (int i = features.scan(start, true), j = features.scan(i + 1, true); j < finish; i = j, j = features.scan(j + 1, true)) {
+            float alpha = State::locals[id].neighbourhood[2 * i].lowerbound();
+            float beta = State::locals[id].neighbourhood[2 * j].upperbound();
+            if (alpha >= beta) { prune_feature(i); }
+            if (j >= finish - 1) { break; }
+        }
+
+        for (int i = features.rscan(finish - 1, true), j = features.rscan(i - 1, true); j >= start; i = j, j = features.rscan(j - 1, true)) {
+            float alpha = State::locals[id].neighbourhood[2 * i + 1].lowerbound();
+            float beta = State::locals[id].neighbourhood[2 * j + 1].upperbound();
+            if (alpha >= beta) { prune_feature(i); }
+            if (j <= start) { break; }
+        }
     }
-    this -> _explored = true;
-    return;
 }
-void Task::delegate(void) {
-    if (cancelled() || resolved()) {
-        std::cout << "Called delegate on task.cancelled == " << cancelled() << ", task.resolved == " << resolved() << std::endl;
-        throw "Illegal task state transition.";
+
+void Task::feature_exchange(unsigned int id) {
+    Bitmask const & features = this -> _feature_set;
+    int max = features.size();
+    Bitmask & buffer = State::locals[id].columns[0];
+    for (int i = features.scan(0, true); i < max; i = features.scan(i + 1, true)) {
+        for (int j = features.scan(0, true); j < max; j = features.scan(j + 1, true)) {
+            if (i == j) { continue; }
+            for (unsigned short k = 0; k < 4; ++k) {
+                buffer = this -> _capture_set;
+                bool i_sign = (bool)(k & 1);
+                bool j_sign = (bool)((k >> 1) & 1);
+                State::dataset.subset(i, i_sign, buffer); // population after applying i filter
+                int i_count = buffer.count(); 
+                State::dataset.subset(j, j_sign, buffer); // population remaining if !j filter is applied
+                if (i_count != buffer.count()) { continue; } // implies that i is not a subset of j
+                // implies that i IS a subset of j, therefore !j is a subset of !i
+                // (since i + !i covers the same set as j + !j)
+                float not_i_risk = State::locals[id].neighbourhood[2 * i + (int)(!i_sign)].upperbound();
+                float not_j_risk = State::locals[id].neighbourhood[2 * j + (int)(!j_sign)].lowerbound();
+                // not_i_risk <= not_j_risk and i IS a subset of j implies that risk_i <= risk_j
+                if (not_i_risk <= not_j_risk && features.get(i)) { prune_feature(j); break; }
+            }
+        }
     }
-    this -> _delegated = true;
-    return;
 }
-void Task::cancel(void) {
-    if (resolved()) {
-        std::cout << "Called cancel on task.cancelled == " << cancelled() << ", task.resolved == " << resolved() << std::endl;
-        throw "Illegal task state transition.";
+
+void Task::send_explorers(float new_scope, unsigned int id) {
+    if (this -> uncertainty() == 0) { return; }
+    this -> scope(new_scope);
+
+    float exploration_boundary = upperbound();
+    if (Configuration::look_ahead) { exploration_boundary = std::min(exploration_boundary, this -> _upperscope); }
+
+    Bitmask const & features = this -> _feature_set;
+    for (int j_begin = 0, j_end = 0; features.scan_range(true, j_begin, j_end); j_begin = j_end) {
+        for (unsigned int j = j_begin; j < j_end; ++j) {
+            Task & left = State::locals[id].neighbourhood[2 * j];
+            Task & right = State::locals[id].neighbourhood[2 * j + 1];
+            float lower, upper;
+            if (Configuration::rule_list) {
+                lower = std::min(left.lowerbound() + right.base_objective(), left.base_objective() + right.lowerbound());
+                upper = std::min(left.upperbound() + right.base_objective(), left.base_objective() + right.upperbound());
+            } else {
+                lower = left.lowerbound() + right.lowerbound();
+                upper = left.upperbound() + right.upperbound();
+            }
+
+            // additional requirement for skipping covered tasks. covered tasks must be unscoped:
+            // that is, their upperbound must be strictly less than their scope 
+
+            if (lower > exploration_boundary) { continue; } // Skip children that are out of scope
+            if (upper <= this -> _coverage) { continue; } // Skip children that have been explored
+
+            if (Configuration::rule_list) {
+                send_explorer(left, exploration_boundary - right.base_objective(), -(j + 1), id);
+                send_explorer(right, exploration_boundary - left.base_objective(), (j + 1), id);
+            } else {
+                send_explorer(left, exploration_boundary - right.lowerbound(), -(j + 1), id);
+                send_explorer(right, exploration_boundary - left.lowerbound(), (j + 1), id);
+            }
+        }
     }
-    this -> _cancelled = true;
-    return;
+    this -> _coverage = this -> _upperscope;
 }
-void Task::resolve(void) {
-    if (cancelled()) {
-        std::cout << "Called resolve on task.cancelled == " << cancelled() << ", task.resolved == " << resolved() << std::endl;
-        throw "Illegal task state transition.";
+
+void Task::send_explorer(Task const & child, float scope, int feature, unsigned int id) {
+    bool send = true;
+    child_accessor key;
+    if (State::graph.children.find(key, std::make_pair(this -> identifier(), feature))) {
+        vertex_accessor child;
+        State::graph.vertices.find(child, key -> second);
+        if (scope < child -> second.upperscope()) {
+            adjacency_accessor parents;
+            State::graph.edges.find(parents, child -> second.identifier()); // insert backward look-up entry
+            std::pair<adjacency_iterator, bool> insertion = parents -> second.insert(
+                std::make_pair(this -> identifier(), std::make_pair(Bitmask(State::dataset.width(), false), scope)));
+            insertion.first -> second.first.set(std::abs(feature) - 1, true);
+            insertion.first -> second.second = std::min(insertion.first -> second.second, scope);
+            child -> second.scope(scope);
+            send = false;
+        }
+        key.release();
     }
-    this -> _resolved = true;
-    this -> _lowerbound = this -> _upperbound;
-    return;
+    if (send) {
+        State::locals[id].outbound_message.exploration(
+            this->_identifier,  // sender tile
+            child._capture_set, // recipient capture_set
+            this->_feature_set, // recipient feature_set
+            feature,            // feature
+            scope,              // scope
+            this->_support - this->_lowerbound); // priority
+        State::queue.push(State::locals[id].outbound_message);
+    }
+}
+
+
+bool Task::update(float lower, float upper, int optimal_feature) {
+    bool change = lower != this -> _lowerbound || upper != this -> _upperbound;
+    this -> _lowerbound = std::max(this -> _lowerbound, lower);
+    this -> _upperbound = std::min(this -> _upperbound, upper);
+    this -> _lowerbound = std::min(this -> _upperbound, this -> _lowerbound);
+
+    this -> _optimal_feature = optimal_feature;
+
+    float regularization = Configuration::regularization;
+    if ((Configuration::cancellation && 1.0 - this -> _lowerbound < 0.0)
+        || this -> _upperbound - this -> _lowerbound <= std::numeric_limits<float>::epsilon()) {
+        this -> _lowerbound = this -> _upperbound;
+    }
+    return change;
+}
+
+std::string Task::inspect(void) const {
+    std::stringstream status;
+    status << "Capture: " << this -> _capture_set.to_string() << std::endl;
+    // status << "  State[SEDRCIT] = " << (int)(sampled()) << (int)(explored()) << (int)(delegated()) << (int)(resolved()) << (int)(cancelled()) << (int)(informed()) << (int)(terminal()) << std::endl;
+    status << "  Base: " << this -> _base_objective << ", Bound: [" << this -> _lowerbound << ", " << this -> _upperbound << "]" << std::endl;
+    status << "  Coverage: " << this -> _coverage << ", Scope: [" << this -> _lowerscope << ", " << this  -> _upperscope << "]" << std::endl;
+    status << "  Feature: " << this -> _feature_set.to_string() << std::endl;
+    return status.str();
 }

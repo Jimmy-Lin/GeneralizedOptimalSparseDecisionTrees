@@ -1,0 +1,44 @@
+[
+  {
+    "false": {
+      "false": {
+        "false": {
+          "complexity": 0.05000000074505806,
+          "loss": 0.10000000149011612,
+          "name": "l",
+          "prediction": "FTF"
+        },
+        "feature": 3,
+        "name": "f4",
+        "reference": 1,
+        "relation": "==",
+        "true": {
+          "complexity": 0.05000000074505806,
+          "loss": 0.0,
+          "name": "l",
+          "prediction": "TFF"
+        }
+      },
+      "feature": 2,
+      "name": "f3",
+      "reference": 1,
+      "relation": "==",
+      "true": {
+        "complexity": 0.05000000074505806,
+        "loss": 0.0,
+        "name": "l",
+        "prediction": "FFT"
+      }
+    },
+    "feature": 0,
+    "name": "f1",
+    "reference": 1,
+    "relation": "==",
+    "true": {
+      "complexity": 0.05000000074505806,
+      "loss": 0.0,
+      "name": "l",
+      "prediction": "TFF"
+    }
+  }
+]

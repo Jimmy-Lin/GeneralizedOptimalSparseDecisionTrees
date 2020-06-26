@@ -115,22 +115,22 @@ def get_code(tree, feature_names, target_names, spacer_base="    "):
     def recurse(left, right, threshold, features, node, depth):
         spacer = spacer_base * depth
         if (threshold[node] != -2):
-            # print((spacer + "if ( " + feats[node] + " <= " + str(threshold[node]) + " ) {"))
+            print((spacer + "if ( " + feats[node] + " <= " + str(threshold[node]) + " ) {"))
             if left[node] != -1:
                 recurse(left, right, threshold, feats, left[node], depth + 1)
-            # print((spacer + "}\n" + spacer + "else {"))
+            print((spacer + "}\n" + spacer + "else {"))
             if right[node] != -1:
                 recurse(left, right, threshold, feats, right[node], depth + 1)
-            # print((spacer + "}"))
+            print((spacer + "}"))
         else:
             target = value[node]
-            # print((spacer + "return " + str(target)))
+            print((spacer + "return " + str(target)))
             for i, v in zip(np.nonzero(target)[1], target[np.nonzero(target)]):
                 target_name = target_names[i]
                 target_count = int(v)
-                # print((spacer + "return " + str(target_name) + " " + str(i) + " " \
-                    #   " ( " + str(
-                    # target_count) + " examples )"))
+                print((spacer + "return " + str(target_name) + " " + str(i) + " " \
+                                                                              " ( " + str(
+                    target_count) + " examples )"))
 
     recurse(left, right, threshold, feature_names, 0, 0)
     
@@ -138,8 +138,8 @@ def cart(x, y, name, n, P, N, lamb, w, theta, MAXDEPTH):
     clf = sklearn.tree.DecisionTreeClassifier(
             max_depth=None if MAXDEPTH == float('Inf') else MAXDEPTH,
             min_samples_split=max(math.ceil(lamb * 2 * n), 2),
-            min_samples_leaf=max(math.ceil(lamb * n), 1),
-            max_leaf_nodes=math.floor(1 / (2 * lamb)) if lamb > 0 else None,
+            min_samples_leaf=math.ceil(lamb * n),
+            max_leaf_nodes=math.floor(1 / (2 * lamb)),
             min_impurity_decrease=lamb)
     clf = clf.fit(x, y)
     nleaves_CART = (clf.tree_.node_count + 1) / 2

@@ -3,66 +3,109 @@
 
 #include <vector>
 #include <tuple>
+#include <sstream>
+#include <mutex>
+#include <random>
+#include <iostream>
+#include <limits>
 #include <tbb/scalable_allocator.h>
 
-#include "key.hpp"
+class Task;
 
-typedef std::pair<float, float> bounding_pair;
-typedef std::unordered_map<unsigned int, float, std::hash<unsigned int>, std::equal_to<unsigned int>, tbb::scalable_allocator< std::pair<const unsigned int, float> > > similarity_index_type;
-typedef std::unordered_map<unsigned int, similarity_index_type, std::hash<unsigned int>, std::equal_to<unsigned int>, tbb::scalable_allocator<std::pair<const unsigned int, similarity_index_type>>> similarity_index_table_type;
+#include "bitmask.hpp"
+#include "configuration.hpp"
+#include "dataset.hpp"
+#include "graph.hpp"
+#include "integrity_violation.hpp"
+#include "queue.hpp"
+#include "state.hpp"
+#include "types.hpp"
 
 class Task {
 public:
     Task(void);
-    Task(float const lowerbound, float const upperbound, float const support, float base_objective);
-    Task(float const lowerbound, float const upperbound, float const support, float const base_objective, Bitmask const & sensitivity, similarity_index_table_type const & index);
 
-    float const support(void) const;
-    float const lowerbound(void) const;
-    float const upperbound(void) const;
-    float const potential(void) const;
-    float const uncertainty(void) const;
-    float const objective(void) const;
-    float const base_objective(void) const;
-    float const scope(void) const;
-    void rescope(float scope_value);
+    // @param capture_set: indicator for which data points are captured
+    // @param feature_set: indicator for which features are still active
+    Task(Bitmask const & capture_set, Bitmask const & feature_set, unsigned int id);
 
-    Bitmask const & sensitivity(void) const;
-    
-    bool const sensitive(int const index) const;
-    void desensitize(int const index);
+    // @returns the support of the this task
+    float support(void) const;
 
-    float const priority(float const optimism) const;
+    // @returns the objective lowerbound of this task
+    float lowerbound(void) const;
 
-    void inform(float const lowerbound, float const upperbound);
+    // @return the objective upperbound of this task
+    float upperbound(void) const;
 
-    bool const explored(void) const;
-    bool const delegated(void) const;
-    bool const cancelled(void) const;
-    bool const resolved(void) const;
+    float lowerscope(void) const;
+    float upperscope(void) const;
+    void scope(float new_scope);
 
-    void explore(void);
-    void delegate(void);
-    void cancel(void);
-    void resolve(void);
+    // @return the objective optimality gap of this task
+    float uncertainty(void) const;
 
-    std::unordered_map<unsigned int, bounding_pair, std::hash<unsigned int>, std::equal_to<unsigned int>, tbb::scalable_allocator<std::pair<const unsigned int, bounding_pair>>> combined_bounds;
-    similarity_index_table_type similarity_index;
+    // @return the objective risk of not splitting
+    float base_objective(void) const;
 
+    // @return the Alkaike information of the captured data
+    float information(void) const;
+
+    // @return a bitmask representing the points captured by this task
+    Bitmask const & capture_set(void) const;
+
+    // @return a bitmask representing the features that are not yet pruned
+    Bitmask const & feature_set(void) const;
+
+    Tile & identifier(void);
+    Tile & parent(void);
+    std::vector<int> & order(void);
+
+    // @modifies: prunes features
+    void prune_feature(unsigned int id);
+
+    // @modifies: inserts children into the cache based on the currently non-pruned features
+    void create_children(unsigned int id);
+
+    // @modifies: prunes features
+    void prune_features(unsigned int id);
+
+    // @modifies: prunes features based on the indifference bound within adjacent thresholds of ordinal features
+    void continuous_feature_exchange(unsigned int id);
+
+    // @modifes: prunes features based on the indifference bound for all feature pairs
+    void feature_exchange(unsigned int id);
+
+    void send_explorers(float scope, unsigned int id);
+
+    void send_explorer(Task const & child, float scope, int feature, unsigned int id);
+
+    bool update(float lower, float upper, int optimal_feature);
+
+    // observer method used for debugging
+    std::string inspect(void) const;
 private:
+    Tile _identifier;
+    Bitmask _capture_set;
+    Bitmask _feature_set;
+
+    std::vector<int> _order;
+
     float _support;
-    float _lowerbound;
-    float _upperbound;
-    float _potential;
     float _base_objective;
-    float _scope = 1.0;
+    float _information;
 
-    Bitmask _sensitivity;
+    float _lowerbound = -std::numeric_limits<float>::max();
+    float _upperbound = std::numeric_limits<float>::max();
 
-    bool _explored = false;
-    bool _delegated = false;
-    bool _resolved = false;
-    bool _cancelled = false;
+    float _context_lowerbound = 0.0;
+    float _context_upperbound = 0.0;
+
+    float _lowerscope = -std::numeric_limits<float>::max();
+    float _upperscope = std::numeric_limits<float>::max();
+    float _coverage = -std::numeric_limits<float>::max();
+
+    int _optimal_feature = -1; // Feature index set if part of the oracle model
 };
 
 #endif

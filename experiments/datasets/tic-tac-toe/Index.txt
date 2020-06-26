@@ -1,0 +1,5 @@
+Index of tic-tac-toe
+
+02 Dec 1996      126 Index
+19 Aug 1991    25866 tic-tac-toe.data
+19 Aug 1991     3244 tic-tac-toe.names

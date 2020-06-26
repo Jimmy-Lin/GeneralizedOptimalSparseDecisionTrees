@@ -1,0 +1,112 @@
+
+void Optimizer::diagnose_non_convergence(void) {
+    diagnose_non_convergence(this -> root);
+    return;
+}
+bool Optimizer::diagnose_non_convergence(key_type const & key) {
+    if (Configuration::diagnostics == false) { return false; }
+
+    vertex_accessor task;
+    if (!State::graph.vertices.find(task, key)) {
+        std::cout << "Missing a downward call:" << std::endl;
+        std::cout << key.to_string() << std::endl;
+        return true;
+    }
+
+    if (task -> second.uncertainty() == 0 || task -> second.lowerbound() >= task -> second.upperscope()) { return false; }
+
+    std::cout << "Non-Convergent Task" << std::endl;
+    std::cout << task -> second.identifier().to_string() << std::endl;
+    std::cout << task -> second.inspect() << std::endl;
+
+    unsigned int reasons = 0;
+    bound_accessor bounds;
+    State::graph.bounds.find(bounds, task -> second.identifier());
+    for (bound_iterator iterator = bounds -> second.begin(); iterator != bounds -> second.end(); ++iterator) {
+        int feature = std::get<0>(* iterator);
+        bool ready;
+        float lower = 0.0, upper = 0.0;
+        for (int sign = -1; sign <= 1; sign += 2) {
+            vertex_accessor child;
+            child_accessor key;
+            ready = ready && State::graph.children.find(key, std::make_pair(task -> second.identifier(), sign * (feature + 1)))
+                && State::graph.vertices.find(child, key -> second);
+            if (ready) {
+                lower += child -> second.lowerbound();
+                upper += child -> second.upperbound();
+            }
+        }
+        bool missing_signal = false;
+        if (ready 
+            && (lower != std::get<1>(* iterator) || upper != std::get<2>(* iterator)) 
+            && (lower > task -> second.lowerbound() || upper < task -> second.upperbound())) {
+
+            missing_signal = true;
+            std::get<1>(* iterator) = lower;
+            std::get<2>(* iterator) = upper;
+            std::cout << "Missing Signal:" << std::endl;
+            // std::cout << "Task: " << task -> second.capture_set().to_string() << std::endl;
+            std::cout << "Missing Signal From Feature: " << feature << std::endl;
+        }
+
+        float boundary = std::min(task -> second.upperbound(), task -> second.upperscope());
+        if (std::get<1>(* iterator) + std::numeric_limits<float>::epsilon() > boundary) { continue; }
+        if (std::get<1>(* iterator) == std::get<2>(* iterator)) { continue; }
+
+        if (std::get<1>(* iterator) != task -> second.lowerbound() && std::get<2>(* iterator) != task -> second.upperbound()) { continue; }
+
+        ++reasons;
+
+        std::cout << "Non-Convergent Feature: " << feature << ", Bounds: [" << std::get<1>(* iterator) << ", " << std::get<2>(* iterator) << "]" << std::endl;
+        
+        {
+            vertex_accessor child;
+            child_accessor key;
+            bool found = false;
+            if (State::graph.children.find(key, std::make_pair(task -> second.identifier(), -(feature + 1)))) {
+                float uncertainty = 0.0;
+                vertex_accessor subtask;
+                if (State::graph.vertices.find(subtask, key -> second)) {
+                    found  = true;
+                    
+                    if (task -> second.identifier().to_string() == "55 : 0000001101001001010111010111010111110010010101001101100000000100100100101001101011101011111001001010100110110011110011010110011101010101111101011100100100011011010011000101101000001010101010111010101110010010001101101001111111111111111111111101111111011111101101000111111100111111111010110111101110111110101111100100101011011010011111111111111111111111111111111111111111010100111111001111111111111111111111111111111111110111100010011111100111111111111111111101110101111101011110100100011011010011111011111111101111111110111110101111010010001101101001111111111111111111111111011111111111001001010100110100111111111111111111111111111110101111100100101010011010011111111111111111111010111110111011101111101100011111001111111111111111111110101011111010111101001000110110100111111111111111111111111111111111111110110111010010010011111111011111111111011111111111111101111101110011011001111111111111111111111111111011101110111110110001111100111111111111111111111111111111111111100100101011011010011111110010111110111010111110111011101111101110010110001111111111111010111010101011101010111001001000110110100111111111111111111111111111111111111111111111110111100011111111111111111111111111111110111110010010001101101001111111111111111111111111111011101110111110011011111000111111111111111111111111101111111111111111100111101100011100111111101111010111011111010101110010011001101101001111111111111111111111111111111111111111111111111011000111111111111111111111111111111111111111111111111110010011111111110111110111010111110111011001101101110010010001111111111111111111111111111101110111001001000110110100111111111111111111111111111111110111011111010101110100011111111111111111111010111110111011101111101110010010001111111111111011101110101111101010111001001000110110100111111111111111111111111111111111111101101100111011010011111111111111110111110111110111011101101101010110110001111111111111111111111111111101111111011011111100100100111111111111111110111011101110111011101101100011011010011111111111111111111111101101111111011101101010110010010111111111111111111111111101110111011110111111101000001011111111111111111111111110111011100111011111110100100101111111111110111111101111111111101011101101010110010001111111111111111111111111101110111011110111101011001001011111101101111101011101011001110100011011011100100100101111111111101111011111111111011111110110111111001001001111111111111111110101110100110111000110110111001001001011111111111111111111111110111011000111011010101100100101111111011111111111011111011101110111101111111000000001111111111111111110111110100110111001110110111011001001011111100101111101010101010001010100011011011100100100101111111111111111111110111100101010001101101110010010001111111111111111110111110100110101000110110111001001001011111101101111101011101010001010100011011011101100100101111111111111111101101101101111101011101111011110110010111111111111111111111110110111110001110111101111000000111111111111111111111111010011011100111011111110000000101111111111110111101100101000101000001101101010110010010") {
+                    }
+
+                    if (task -> second.identifier().to_string() == "24 : 111111101100100100111001111111101110101110111001111111101110100000101001111101111101110101011001111111101110101110110001111111101110101110110001111111101110101110110001111111101110101110110001111111101110101110110001111111111110101110110001111101111101110001101001111101111101010101011001111110111000100000101001111111111110101110110001111101111101110101001001111111111111111101111001111111111111110101011001111111111111101110110001111111111111101110110001101101111101010101011001111111111111101110110001111111111111111101101001111111111111111110110001111111111111111110110001111111111111111110110001111111111111111110110001101101111101010001001001110110101010101010101010111111111111111101001001111111111111111111110001101101111101010001001001111111111111111111100001111111111111111111010001111111010110101010100010111111111111011101001001111111111111111111010001101111110101010001001001111111111111011111010001111111111111111011001001010110111001110001101010111111111111011111010001111010010001110000101010111011010011110001101010111111111111011011010001110100010001010001001001111111111111011011000001111111111111011011000001010110110011111010101001111010010011011001001010111011010011011011001010101011010011011011000001010010010011011011000010") {
+                        std::cout << "Missing Child: " << subtask -> second.identifier().to_string() << std::endl; 
+                    }
+
+                    std::cout << "Left Bounds: [" << subtask -> second.lowerbound() << ", " << subtask -> second.upperbound() << "], Left Scope: [" << subtask -> second.lowerscope() << ", " << subtask -> second.upperscope() << "]" << std::endl;
+                    uncertainty = subtask -> second.uncertainty();
+                    subtask.release();
+                }
+
+                if (uncertainty > 0.0 && diagnose_non_convergence(key -> second)) { break; }
+            }
+            if (found == false) { std::cout << "Left Child Not Found." << std::endl; }
+        }
+        {
+            vertex_accessor child;
+            child_accessor key;
+            bool found = false;
+            if (State::graph.children.find(key, std::make_pair(task -> second.identifier(), (feature + 1)))) {
+                float uncertainty = 0.0;
+                vertex_accessor subtask;
+                if (State::graph.vertices.find(subtask, key -> second)) {
+                    found  = true;
+                    std::cout << "Right Bounds: [" << subtask -> second.lowerbound() << ", " << subtask -> second.upperbound() << "], Right Scope: [" << subtask -> second.lowerscope() << ", " << subtask -> second.upperscope() << "]" << std::endl;
+                    uncertainty = subtask -> second.uncertainty();
+                    subtask.release();
+                }
+                if (uncertainty > 0.0 && diagnose_non_convergence(key -> second)) { break; }
+            }
+            if (found == false) { std::cout << "Right Child Not Found." << std::endl; }
+        }
+    }
+
+    if (reasons == 0) {
+        std::cout << "Missing an upward call:" << std::endl;
+        std::cout << task -> second.inspect() << std::endl;
+    }
+    return true;
+}
