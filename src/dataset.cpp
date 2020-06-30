@@ -295,9 +295,6 @@ void Dataset::summary(Bitmask const & capture_set, float & info, float & potenti
         max_cost_reduction += this -> diff_costs[j] * distribution[j];
 
         buffer = capture_set; // Set representing the captured points
-        this -> targets.at(j).bit_and(buffer); // Captured majority points with label j
-
-        buffer = capture_set; // Set representing the captured points
         this -> majority.bit_and(buffer, false); // Captured majority points
         this -> targets.at(j).bit_and(buffer); // Captured majority points with label j
         equivalent_point_loss += this -> match_costs[j] * buffer.count(); // Calculate frequency

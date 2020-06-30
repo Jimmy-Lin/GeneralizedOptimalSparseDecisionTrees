@@ -24,6 +24,7 @@ The configuration file is a JSON object and has the following structure and defa
   "similar_support": true,
   "feature_exchange": true,
   "continuous_feature_exchange": true,
+  "feature_transform": true,
   "rule_list": false,
 
   "diagnostics": false,
@@ -74,6 +75,10 @@ The configuration file is a JSON object and has the following structure and defa
 **continuous_feature_exchange**
  - Values: true or false
  - Description: Enables pruning of pairs continuous of feature thresholds using subset comparison
+
+**feature_transform**
+ - Values: true or false
+ - Description: Switches from capture set identification to tile (captured value) identification
 
 **diagnostics**
  - Values: true or false
@@ -178,3 +183,44 @@ The configuration file is a JSON object and has the following structure and defa
  - Values: string representing a path to a directory.
  - Description: snapshots used for trace-tree visualization will be stored in this directory
  - Special Case: When set to empty string, no snapshots are stored.
+
+# Optimizing Different Loss Functions
+
+When using the Python interface `python/model/gosdt.py` additional loss functions are available.
+Here is the list of loss functions implemented along with descriptions of their hyperparameters.
+
+## Accuracy
+```
+{ "objective": "acc" }
+```
+This optimizes the loss defined as the uniformly weighted number of misclassifications.
+
+## Balanced Accuracy
+```
+{ "objective": "bacc" }
+```
+This optimizes the loss defined as the number of misclassifications, adjusted for imbalanced representation of positive or negative samples.
+
+## Weighted Accuracy
+```
+{ "objective": "wacc", "w": 0.5 }
+```
+This optimizes the loss defined as the number of misclassifications, adjusted so that negative samples have a weight of `w` while positive samples have a weight of `1.0`
+
+## F - 1 Score
+```
+{ "objective": "f1" }
+```
+This optimizes the loss defined as the [F-1](https://en.wikipedia.org/wiki/F1_score) score of the model's predictions.
+
+## Area under the Receiver Operanting Characteristics Curve
+```
+{ "objective": "auc" }
+```
+This maximizes the area under the [ROC](https://en.wikipedia.org/wiki/Receiver_operating_characteristic) curve formed by varying the prediction of the leaves.
+
+## Partial Area under the Receiver Operanting Characteristics Curve
+```
+{ "objective": "pauc", "theta": 0.1 }
+```
+This maximizes the partial area under the [ROC](https://en.wikipedia.org/wiki/Receiver_operating_characteristic) curve formed by varying the prediction of the leaves. The area is constrained so that false-positive-rate is in the closed interval `[0,theta]`
