@@ -24,7 +24,6 @@ The configuration file is a JSON object and has the following structure and defa
   "similar_support": true,
   "feature_exchange": true,
   "continuous_feature_exchange": true,
-  "feature_transform": true,
   "rule_list": false,
 
   "diagnostics": false,
@@ -75,10 +74,6 @@ The configuration file is a JSON object and has the following structure and defa
 **continuous_feature_exchange**
  - Values: true or false
  - Description: Enables pruning of pairs continuous of feature thresholds using subset comparison
-
-**feature_transform**
- - Values: true or false
- - Description: Switches from capture set identification to tile (captured value) identification
 
 **diagnostics**
  - Values: true or false
