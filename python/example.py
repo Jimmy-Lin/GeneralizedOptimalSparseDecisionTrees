@@ -29,3 +29,4 @@ print("Risk: {}".format(
     + 1 - training_accuracy))
 model.tree.__initialize_training_loss__(X, y)
 print(model.tree)
+print(model.latex())

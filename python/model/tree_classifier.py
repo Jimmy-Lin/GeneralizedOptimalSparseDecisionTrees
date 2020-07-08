@@ -398,7 +398,7 @@ class TreeClassifier:
                     name = "{} {} {}".format(node["name"], node["relation"], node["reference"])
             else:
                 name = "feature_{} {} {}".format(node["feature"], node["relation"], node["reference"])
-            return "[ ${}$ {} {} ]".format(name, self.__latex__(node["true"]), self.__latex__(node["false"])).replace("==", " \eq ").replace(">=", " \ge ").replace("<=", " \le ")
+            return "[ ${}$ {} {} ]".format(name, self.latex(node["true"]), self.latex(node["false"])).replace("==", " \eq ").replace(">=", " \ge ").replace("<=", " \le ")
 
     def json(self):
         """
