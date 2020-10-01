@@ -34,3 +34,9 @@ List of external dependencies
 [**License**](doc/license.md)
 
 Licensing information
+
+---
+
+[**Inquiries**]
+
+For general inquiries, send an email to `jimmy.projects.lin@gmail.com`
