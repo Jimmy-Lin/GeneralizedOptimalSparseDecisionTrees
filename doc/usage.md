@@ -21,6 +21,10 @@ gosdt dataset.csv config.json
 cat dataset.csv | gosdt config.json >> output.json
 ```
 
+For examples of dataset files, refer to `experiments/datasets/compas/binned.csv`.
+For an example configuration file, refer to `experiments/configurations/compas.json`.
+For documentation on the configuration file, refer to [**Dependency Installation**](/doc/configuration.md)
+
 # As a Python Library with C++ Extensions
 ## Build and Installation
 ```
