@@ -37,6 +37,6 @@ Licensing information
 
 ---
 
-[**Inquiries**]
+**Inquiries**
 
 For general inquiries, send an email to `jimmy.projects.lin@gmail.com`
