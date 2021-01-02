@@ -306,9 +306,24 @@ class GOSDT:
             }
         else:
             features = {}
+            # In next commented section there is a bug when trying to validate if a leaf exists in the "features" dict. Essentially, a "leaf" has 
+            # the form: (feature_1, feature_2, ..., feature_n) and the "keys" and "values" of the "features" dict has the form:
+            # key = feature
+            # value = frequency
+            # So, the condition must be changed in order to evaluate the case when a "feature" from the current "leaf" exists in the "features" dict
+            # Otherwise, for some specific cases this loop crashes
+            # ------ Original loop ---------- #
+            # for leaf in leaves.keys():
+            #     if not leaf in features:
+            #         for e in leaf:
+            #             features[abs(e)] = 1
+            #         else:
+            #             features[abs(e)] += 1
+
+            # ------ Fixed loop ---------- #
             for leaf in leaves.keys():
-                if not leaf in features:
-                    for e in leaf:
+                for e in leaf:
+                    if abs(e) not in features.keys():
                         features[abs(e)] = 1
                     else:
                         features[abs(e)] += 1
