@@ -289,7 +289,7 @@ class GOSDT:
         else:
             decoded_leaves = []
             for leaf in leaves_c:
-                decoded_leaf = tuple((dic[j] if j > 0 else -dic[-j]) for j in leaf)
+                decoded_leaf = tuple((dic[j]+1 if j > 0 else -(dic[-j]+1)) for j in leaf)
                 decoded_leaves.append(decoded_leaf)
             source = self.__translate__(dict(zip(decoded_leaves, pred_c)))
         self.tree = TreeClassifier(source, encoder=encoder)
@@ -327,6 +327,8 @@ class GOSDT:
                     positive_leaves[tuple(s for s in leaf if s != split)] = prediction
                 else:
                     negative_leaves[tuple(s for s in leaf if s != -split)] = prediction
+            if split != None:
+                split = split-1
             return {
                 "feature": split,
                 "name": "feature_" + str(split),
