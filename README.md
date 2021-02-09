@@ -353,7 +353,7 @@ This optimizes the loss defined as the number of misclassifications, adjusted so
 
 ### F - 1 Score
 ```
-{ "objective": "f1" }
+{ "objective": "f1", "w": 0.9 }
 ```
 This optimizes the loss defined as the [F-1](https://en.wikipedia.org/wiki/F1_score) score of the model's predictions.
 
