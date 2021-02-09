@@ -87,7 +87,6 @@ class GOSDT:
                 self.configuration["theta"] = None
             elif self.configuration["objective"] == "f1":
                 self.configuration["theta"] = None
-                self.configuration["w"] = None
             elif self.configuration["objective"] == "auc":
                 self.configuration["theta"] = None
                 self.configuration["w"] = None
