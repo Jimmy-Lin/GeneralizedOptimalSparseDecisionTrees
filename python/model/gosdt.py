@@ -309,8 +309,8 @@ class GOSDT:
         else:
             features = {}
             for leaf in leaves.keys():
-                if not leaf in features:
-                    for e in leaf:
+                for e in leaf:
+                    if not abs(e) in features:
                         features[abs(e)] = 1
                     else:
                         features[abs(e)] += 1
