@@ -2251,7 +2251,7 @@ def bbound(x, y, name, lamb, prior_metric=None, w=None, theta=None, MAXDEPTH=flo
     print("num_captured: ", num_captured)
     print("prediction: ", pred_c)
     print("Objective: ", R_c)
-    print("Accuracy: ", accu)
+    print(name, ": ", accu)
     print("COUNT of the best tree: ", C_c)
     print("time when the best tree is achieved: ", time_c)
     print("TOTAL COUNT: ", COUNT)
