@@ -11,6 +11,7 @@
     "diagnostics": false,
     "weight": false,
     "balance": false,
+    "non_binary": false,
 
     "look_ahead": true,
     "similar_support": false,

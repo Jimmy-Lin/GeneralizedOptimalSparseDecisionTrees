@@ -1,6 +1,6 @@
 {
     "uncertainty_tolerance": 0.0,
-    "regularization": 0.01,
+    "regularization": 0.05,
     "upperbound": 0.0,
     
     "time_limit": 0,
@@ -10,6 +10,7 @@
     "verbose": true,
     "diagnostics": false,
     "balance": false,
+    "non_binary": true,
 
     "look_ahead": true,
     "similar_support": true,

@@ -70,6 +70,9 @@ public:
     void decode_json(json & node) const;
     void translate_json(json & node, translation_type const & main, translation_type const & alternative) const;
 
+    void summarize(json & node) const;
+    void intersect(json & src, json & dest) const;
+
     // @param spacing: number of spaces to used in the indentation format
     // @modifies serialization: string representation of the JSON object representation of this model
     void serialize(std::string & serialization, int const spacing = 0) const;

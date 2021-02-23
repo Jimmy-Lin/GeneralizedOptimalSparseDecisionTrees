@@ -21,6 +21,7 @@ bool Configuration::continuous_feature_exchange = true;
 bool Configuration::feature_exchange = true;
 bool Configuration::feature_transform = true;
 bool Configuration::rule_list = false;
+bool Configuration::non_binary = false;
 
 std::string Configuration::costs = "";
 std::string Configuration::model = "";
@@ -57,6 +58,7 @@ void Configuration::configure(json config) {
     if (config.contains("feature_exchange")) { Configuration::feature_exchange = config["feature_exchange"]; }
     if (config.contains("feature_transform")) { Configuration::feature_transform = config["feature_transform"]; }
     if (config.contains("rule_list")) { Configuration::rule_list = config["rule_list"]; }
+    if (config.contains("non_binary")) { Configuration::non_binary = config["non_binary"]; }
 
     if (config.contains("costs")) { Configuration::costs = config["costs"]; }
     if (config.contains("model")) { Configuration::model = config["model"]; }
@@ -89,6 +91,7 @@ std::string Configuration::to_string(unsigned int spacing) {
     obj["feature_exchange"] = Configuration::feature_exchange;
     obj["feature_transform"] = Configuration::feature_transform;
     obj["rule_list"] = Configuration::rule_list;
+    obj["non_binary"] = Configuration::non_binary;
 
     obj["costs"] = Configuration::costs;
     obj["model"] = Configuration::model;

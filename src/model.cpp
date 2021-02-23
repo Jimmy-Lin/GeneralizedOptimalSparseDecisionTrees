@@ -162,9 +162,86 @@ void Model::serialize(std::string & serialization, int const spacing) const {
     return;
 }
 
+void Model::intersect(json & src, json & dest) const {
+
+    if (!src[0].is_null() && !dest[0].is_null()) {
+        dest[0] = std::max(src[0], dest[0]);
+    } else if (!src[0].is_null() && dest[0].is_null()) {
+        dest[0] = src[0];
+    }
+    if (!src[1].is_null() && !dest[1].is_null()) {
+        dest[1] = std::min(src[1], dest[1]);
+    } else if (!src[1].is_null() && dest[1].is_null()) {
+        dest[1] = src[1];
+    }
+}
+
+
+void Model::summarize(json & node) const {
+    if (node.contains("feature")) {
+        summarize(node["true"]);
+        summarize(node["false"]);
+
+        // Check feature domain type
+        bool integral = node["type"] == "integral";
+        bool rational = node["type"] == "rational";
+        bool categorical = node ["type"] == "categorical";
+
+        node["children"] = {json::object(), json::object()};
+        node["children"][0]["then"] = node["true"];
+        node["children"][1]["then"] = node["false"];
+        if (integral) {
+            node["children"][0]["in"] = { node["reference"], nullptr };
+            node["children"][1]["in"] = { nullptr, node["reference"]  };
+        } else if (rational) {
+            node["children"][0]["in"] = { node["reference"], nullptr };
+            node["children"][1]["in"] = { nullptr, node["reference"]  };
+        } else if (categorical) {
+            node["children"][0]["in"] = node["reference"];
+            node["children"][1]["in"] = "default";
+        }
+        node.erase("reference");
+        node.erase("relation");
+        node.erase("true");
+        node.erase("false");
+
+        json new_children = json::array();
+        for (json::iterator it = node["children"].begin(); it != node["children"].end(); ++it) {
+            json & condition = (* it)["in"];
+            json & child = (* it)["then"];
+            if (child.contains("feature") && child["feature"] == node["feature"]) {
+                // Child has grand children and child feature matches parent feature
+                for (json::iterator sub_it = child["children"].begin(); sub_it != child["children"].end(); ++sub_it) {
+                    json & subcondition = (* sub_it)["in"];
+                    json & grandchild = (* sub_it)["then"];
+                    if (integral || rational) {
+                        // Promote grandchild into child
+                        json promoted_condition = { subcondition[0], subcondition[1] };
+                        intersect(condition, promoted_condition);
+                        json promoted_child = { { "in", promoted_condition }, { "then", grandchild } };
+                        new_children.push_back(promoted_child);
+                    } else if (categorical) {
+                        json promoted_child = { { "in", subcondition }, { "then", grandchild } };
+                        new_children.push_back(promoted_child);
+                    }
+                }
+            } else { //re-insert
+                json unpromoted_child = { { "in", condition }, { "then", child } };
+                new_children.push_back(unpromoted_child);
+            }
+        }
+        node["children"] = new_children; // Overwrite previous list fo children
+    } else {
+        // Is a leaf node
+        // No transformation
+    }
+}
+
 void Model::to_json(json & node) const {
     _to_json(node);
     decode_json(node);
+    // Convert to N-ary
+    if (Configuration::non_binary) { summarize(node); }
 }
 
 void Model::_to_json(json & node) const {
@@ -252,10 +329,13 @@ void Model::decode_json(json & node) const {
         node["name"] = feature_name;
         node["relation"] = relation;
         if (Encoder::test_integral(reference)) {
+            node["type"] = "integral";
             node["reference"] = atoi(reference.c_str());
         } else if (Encoder::test_rational(reference)) {
+            node["type"] = "rational";
             node["reference"] = atof(reference.c_str());
         } else {
+            node["type"] = "categorical";
             node["reference"] = reference;
         }
 

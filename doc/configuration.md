@@ -25,6 +25,7 @@ The configuration file is a JSON object and has the following structure and defa
   "feature_exchange": true,
   "continuous_feature_exchange": true,
   "rule_list": false,
+  "non_binary": false,
 
   "diagnostics": false,
   "verbose": false,
@@ -83,6 +84,9 @@ The configuration file is a JSON object and has the following structure and defa
  - Values: true or false
  - Description: Enables printing of configuration, progress, and results to standard output
 
+**verbose**
+ - Values: true or false
+ - Description: Enables non-binary encoding (only supported in command line)
  ## Tuners
 
  **regularization**

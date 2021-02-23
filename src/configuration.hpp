@@ -35,6 +35,7 @@ public:
     static bool feature_exchange; // Flag for enabling the pruning of pairs of features using subset comparison
     static bool feature_transform; // Flag for enabling the equivalence discovery through simple feature transformations
     static bool rule_list; // Flag for enabling rule-list constraints on models
+    static bool non_binary; // Flag for enabling non-binary encoding
 
     static std::string costs; // Path to file containing cost matrix
     static std::string model; // Path to file used to store the extracted models
