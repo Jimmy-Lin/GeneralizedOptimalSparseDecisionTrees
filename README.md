@@ -7,6 +7,7 @@ Implementation of [Generalized Optimal Sparse Decision Tree](https://arxiv.org/p
 - [Configuration](#configuration)
 - [Dependencies](#dependencies)
 - [License](#license)
+- [FAQs](#faqs)
 
 ---
 
@@ -398,6 +399,12 @@ The following dependencies are included as part of the repository, thus requirin
   - **Intel TBB** - `auto/tbb.sh --install`
   - **WiredTiger** - `auto/wiredtiger.sh --install`
   - **OpenCL** - `auto/opencl.sh --install`
+
+---
+
+# FAQs
+
+If you run into any issues, consult the [**FAQs**](/doc/faqs.md) first. 
 
 ---
 
