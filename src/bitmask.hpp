@@ -157,11 +157,11 @@ public:
 
     Bitmask(void);
     // Construction from a single fill-value and size
-    Bitmask(unsigned int size, bool fill = false, bitblock * local_buffer=NULL);
+    Bitmask(unsigned int size, bool fill = false, bitblock * local_buffer=NULL, unsigned char depth_budget = 0);
     // Construction by copying from a stack-based bitblock array
-    Bitmask(bitblock * blocks, unsigned int block_count, bitblock * local_buffer=NULL);
+    Bitmask(bitblock * blocks, unsigned int block_count, bitblock * local_buffer=NULL, unsigned char depth_budget = 0);
     // Construction by copying from a dynamic_bitset
-    Bitmask(dynamic_bitset const & source, bitblock * local_buffer=NULL);
+    Bitmask(dynamic_bitset const & source, bitblock * local_buffer=NULL, unsigned char depth_budget = 0);
     // Construction by copying from another instance
     Bitmask(Bitmask const & source, bitblock * local_buffer=NULL);
 
@@ -271,6 +271,12 @@ public:
     // @param value: a boolean value specifying whether to set the bit to 1 or 0
     void set(unsigned int index, bool value = true);
 
+    // @returns: the depth budget for the subproblem this bitmask represents (assuming the bitmask represents a subproblem)
+    unsigned char get_depth_budget() const;
+
+    // @param: depth_budget: the depth budget for the subproblem this bitmask represents. 
+    void set_depth_budget(unsigned char depth_budget);
+
     // @param reverse: reverses the sequence so that the 0th bit is on the right, as opposed to on the left (little endian)
     // @returns a string representing the bit sequence with each bit represented as the character '1' or '0'
     // @note default reverses the sequence so that bit-0 is the left most in the string
@@ -289,6 +295,10 @@ public:
     void resize(unsigned int _new_size); // The number of bits actually being used (excludes leading zeros in final block)
 
 private:
+    unsigned char depth_budget; // If Bitmask represents subproblem - maximum allowable depth for the solution 
+                                // 1 means no further splits allowed - a (sub)tree with only one node is depth 1.
+                                // 0 means there is no constraint on allowable depth
+
     static tbb::scalable_allocator<bitblock> allocator; // Allocator used to managing memory
     bitblock * content = NULL; // A pointer the blocks containing the bits
     unsigned int _size = 0; // The number of bits actually being used (excludes leading zeros in final block)

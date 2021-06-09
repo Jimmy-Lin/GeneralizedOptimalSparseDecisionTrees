@@ -30,6 +30,7 @@ Task::Task(Bitmask const & capture_set, Bitmask const & feature_set, unsigned in
         max_loss - min_loss < regularization // Accuracy
         || potential < 2 * regularization // Leaf Support
         || terminal
+        || (Configuration::depth_budget != 0 && capture_set.get_depth_budget() == 1) // we are using depth constraints, and depth budget is exhausted
     ) {
         // Node is provably not an internal node of any optimal tree
         this -> _lowerbound = this -> _base_objective;

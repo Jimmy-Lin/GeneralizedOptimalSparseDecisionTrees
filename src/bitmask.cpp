@@ -424,17 +424,21 @@ void Bitmask::precompute(void) {
 // ** Class Definition **
 // **********************
 
-Bitmask::Bitmask(void) {}
+Bitmask::Bitmask(void) {
+    set_depth_budget(0);
+}
 
-Bitmask::Bitmask(unsigned int size, bool filler, bitblock * local_buffer) {
+Bitmask::Bitmask(unsigned int size, bool filler, bitblock * local_buffer, unsigned char depth_budget) {
     initialize(size, local_buffer);
 
     if (filler) { fill(); } else { clear(); }
 
     Bitmask::clean(this -> content, this -> _used_blocks, this -> _offset);
+
+    this->set_depth_budget(depth_budget);
 }
 
-Bitmask::Bitmask(bitblock * source_blocks, unsigned int size, bitblock * local_buffer) {
+Bitmask::Bitmask(bitblock * source_blocks, unsigned int size, bitblock * local_buffer, unsigned char depth_budget) {
     if (Bitmask::integrity_check && source_blocks == NULL) {
         std::stringstream reason;
         reason << "Attempt to construct Bitmask from null source";
@@ -445,9 +449,11 @@ Bitmask::Bitmask(bitblock * source_blocks, unsigned int size, bitblock * local_b
     memcpy(this -> content, source_blocks, this -> _used_blocks * sizeof(bitblock));
 
     Bitmask::clean(this -> content, this -> _used_blocks, this -> _offset);
+
+    this->set_depth_budget(depth_budget);
 }
 
-Bitmask::Bitmask(dynamic_bitset const & source, bitblock * local_buffer) {
+Bitmask::Bitmask(dynamic_bitset const & source, bitblock * local_buffer, unsigned char depth_budget) {
     initialize(source.size(), local_buffer);
 
     // Initialize content using the blocks of this bitset
@@ -457,6 +463,8 @@ Bitmask::Bitmask(dynamic_bitset const & source, bitblock * local_buffer) {
 
     memcpy(this -> content, source_blocks.data(), this -> _used_blocks * sizeof(bitblock));
     Bitmask::clean(this -> content, this -> _used_blocks, this -> _offset);
+
+    this->set_depth_budget(depth_budget);
 }
 
 Bitmask::Bitmask(Bitmask const & source, bitblock * local_buffer) {
@@ -469,6 +477,8 @@ Bitmask::Bitmask(Bitmask const & source, bitblock * local_buffer) {
     initialize(source.size(), local_buffer);
     memcpy(this -> content, source.data(), this -> _used_blocks * sizeof(bitblock));
     Bitmask::clean(this->content, this->_used_blocks, this->_offset);
+    
+    this -> set_depth_budget(source.get_depth_budget());
 }
 
 Bitmask::~Bitmask(void) {
@@ -543,6 +553,7 @@ Bitmask & Bitmask::operator=(Bitmask const & other) {
     bitblock * blocks = this -> content;
     bitblock * other_blocks = other.content;
     memcpy(blocks, other_blocks, this -> _used_blocks * sizeof(bitblock));
+    this -> set_depth_budget(other.get_depth_budget());
     return * this;
 }
 
@@ -592,6 +603,14 @@ void Bitmask::set(unsigned int index, bool value) {
     } else {
         blocks[block_index] = blocks[block_index] & ~mask;
     }
+}
+
+unsigned char Bitmask::get_depth_budget() const {
+    return this->depth_budget;
+}
+
+void Bitmask::set_depth_budget(unsigned char depth_budget) {
+    this->depth_budget = depth_budget;
 }
 
 unsigned int Bitmask::size(void) const { return this -> _size; }
@@ -861,7 +880,10 @@ bool Bitmask::operator==(Bitmask const & other) const {
         throw IntegrityViolation("Bitmask::operator==", reason.str());
     }
     if (size() != other.size()) { return false; }
-    return mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0;
+    if (this->get_depth_budget() != other.get_depth_budget()) { 
+        return false;
+    }
+    return (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0);
 }
 
 bool Bitmask::operator<(Bitmask const & other) const {
@@ -870,7 +892,8 @@ bool Bitmask::operator<(Bitmask const & other) const {
         reason << "Operating with invalid data";
         throw IntegrityViolation("Bitmask::operator<", reason.str());
     }
-    return Bitmask::less_than(this -> content, other.data(), this -> _size);
+    return Bitmask::less_than(this -> content, other.data(), this -> _size) ||
+     (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() < other.get_depth_budget());    
 }
 
 bool Bitmask::operator>(Bitmask const & other) const {
@@ -879,7 +902,8 @@ bool Bitmask::operator>(Bitmask const & other) const {
         reason << "Operating with invalid data";
         throw IntegrityViolation("Bitmask::operator>", reason.str());
     }
-    return Bitmask::greater_than(this -> content, other.data(), this -> _size);
+    return Bitmask::greater_than(this -> content, other.data(), this -> _size) ||
+     (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() > other.get_depth_budget());
 }
 
 bool Bitmask::operator!=(Bitmask const & other) const {
@@ -896,6 +920,7 @@ bool Bitmask::operator<=(Bitmask const & other) const { return !(* this > other)
 
 bool Bitmask::operator>=(Bitmask const & other) const { return !(* this < other); }
 
+// TODO: incorporate depth in hash
 size_t Bitmask::hash(bool bitwise) const {
     size_t seed = this -> _size;
     if (this -> _size == 0) { return seed; }

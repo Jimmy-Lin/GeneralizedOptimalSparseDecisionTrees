@@ -254,12 +254,17 @@ float Dataset::distance(Bitmask const & set, unsigned int i, unsigned int j, uns
 void Dataset::subset(unsigned int feature_index, bool positive, Bitmask & set) const {
     // Performs bit-wise and between feature and set with possible bit-flip if performing negative test
     this -> features[feature_index].bit_and(set, !positive);
+    if (Configuration::depth_budget != 0){ set.set_depth_budget(set.get_depth_budget()-1);} //subproblems have one less depth_budget than their parent
 }
 
 void Dataset::subset(unsigned int feature_index, Bitmask & negative, Bitmask & positive) const {
     // Performs bit-wise and between feature and set with possible bit-flip if performing negative test
     this -> features[feature_index].bit_and(negative, true);
     this -> features[feature_index].bit_and(positive, false);
+    if (Configuration::depth_budget != 0){
+        negative.set_depth_budget(negative.get_depth_budget()-1);
+        positive.set_depth_budget(positive.get_depth_budget()-1);
+    } //subproblems have one less depth_budget than their parent
 }
 
 void Dataset::summary(Bitmask const & capture_set, float & info, float & potential, float & min_loss, float & max_loss, unsigned int & target_index, unsigned int id) const {
