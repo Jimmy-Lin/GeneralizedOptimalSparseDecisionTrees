@@ -75,7 +75,9 @@ gosdt_SOURCES = \
 	src/gosdt.cpp \
 	src/gosdt.hpp \
 	src/main.cpp \
-	src/main.hpp
+	src/main.hpp \
+	src/reference.cpp \
+	src/reference.hpp
 
 if INCLUDE_TESTS
 bin_PROGRAMS += gosdt_test
