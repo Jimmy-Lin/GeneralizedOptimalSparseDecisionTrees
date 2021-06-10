@@ -298,6 +298,9 @@ void Dataset::summary(Bitmask const & capture_set, float & info, float & potenti
     //calculate reference model's error on this capture set, use as estimate for min_loss (possible overestimate)
         float reference_model_loss = 0.0;
         for (int j = depth(); --j >= 0;) {
+            // maximum cost difference across predictions
+            max_cost_reduction += this -> diff_costs[j] * distribution[j];
+
             buffer = capture_set; // Set representing the captured points
             this -> targets.at(j).bit_and(buffer, false); // Captured points with label j
             Reference::labels[j].bit_and(buffer); // Captured points with label j classified correctly by reference model
