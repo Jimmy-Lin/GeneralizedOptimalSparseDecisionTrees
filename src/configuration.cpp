@@ -14,6 +14,8 @@ bool Configuration::verbose = false;
 bool Configuration::diagnostics = false;
 
 unsigned char Configuration::depth_budget = 0;
+bool Configuration::reference_LB = false; 
+std::string Configuration::path_to_labels = "";
 
 bool Configuration::balance = false;
 bool Configuration::look_ahead = true;
@@ -53,6 +55,19 @@ void Configuration::configure(json config) {
     if (config.contains("diagnostics")) { Configuration::diagnostics = config["diagnostics"]; }
 
     if (config.contains("depth_budget")) { Configuration::depth_budget = config["depth_budget"]; }
+    if (config.contains("reference_LB")) { Configuration::reference_LB = config["reference_LB"]; }
+    if (config.contains("path_to_labels")) { Configuration::path_to_labels = config["path_to_labels"]; }
+
+    // If config file specified to use reference model lower bounds, parse the necessary file path:
+    if (Configuration::reference_LB) {
+        if (!std::ifstream(Configuration::path_to_labels).good()) {
+            std::cout << "File Not Found: " << Configuration::path_to_labels << std::endl;
+            throw "Error! reference_LB was true, but path to black box labels provided in the config file was not found.";
+        } else {
+		    std::ifstream reference_labels(Configuration::path_to_labels);
+		    Reference::initialize_labels(reference_labels);
+        }
+    }
 
     if (config.contains("balance")) { Configuration::balance = config["balance"]; }
     if (config.contains("look_ahead")) { Configuration::look_ahead = config["look_ahead"]; }
@@ -88,6 +103,8 @@ std::string Configuration::to_string(unsigned int spacing) {
     obj["diagnostics"] = Configuration::diagnostics;
 
     obj["depth_budget"] = Configuration::depth_budget;
+    obj["reference_LB"] = Configuration::reference_LB;
+    obj["path_to_labels"] = Configuration::path_to_labels;
 
     obj["balance"] = Configuration::balance;
     obj["look_ahead"] = Configuration::look_ahead;
