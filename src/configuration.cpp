@@ -13,6 +13,8 @@ unsigned int Configuration::model_limit = 1;
 bool Configuration::verbose = false;
 bool Configuration::diagnostics = false;
 
+unsigned char Configuration::depth_budget = 0;
+
 bool Configuration::balance = false;
 bool Configuration::look_ahead = true;
 bool Configuration::similar_support = true;
@@ -50,6 +52,8 @@ void Configuration::configure(json config) {
     if (config.contains("verbose")) { Configuration::verbose = config["verbose"]; }
     if (config.contains("diagnostics")) { Configuration::diagnostics = config["diagnostics"]; }
 
+    if (config.contains("depth_budget")) { Configuration::depth_budget = config["depth_budget"]; }
+
     if (config.contains("balance")) { Configuration::balance = config["balance"]; }
     if (config.contains("look_ahead")) { Configuration::look_ahead = config["look_ahead"]; }
     if (config.contains("similar_support")) { Configuration::similar_support = config["similar_support"]; }
@@ -82,6 +86,8 @@ std::string Configuration::to_string(unsigned int spacing) {
 
     obj["verbose"] = Configuration::verbose;
     obj["diagnostics"] = Configuration::diagnostics;
+
+    obj["depth_budget"] = Configuration::depth_budget;
 
     obj["balance"] = Configuration::balance;
     obj["look_ahead"] = Configuration::look_ahead;

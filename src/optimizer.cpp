@@ -38,7 +38,7 @@ void Optimizer::initialize(void) {
     int const m = State::dataset.width();
 
     // Enqueue for exploration
-    State::locals[0].outbound_message.exploration(Tile(), Bitmask(n, true), Bitmask(m, true), 0, std::numeric_limits<float>::max());
+    State::locals[0].outbound_message.exploration(Tile(), Bitmask(n, true, NULL, Configuration::depth_budget), Bitmask(m, true), 0, std::numeric_limits<float>::max());
     State::queue.push(State::locals[0].outbound_message);
     return;
 }
