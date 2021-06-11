@@ -55,9 +55,14 @@ void Configuration::configure(json config) {
     if (config.contains("diagnostics")) { Configuration::diagnostics = config["diagnostics"]; }
 
     if (config.contains("depth_budget")) { Configuration::depth_budget = config["depth_budget"]; }
-    if (config.contains("reference_LB")) { Configuration::reference_LB = config["reference_LB"]; }
+    if (config.contains("reference_LB")) { 
+        Configuration::reference_LB = config["reference_LB"]; 
+    }else {
+        //the alias "warm_LB" in configuration files is sometimes also used to refer to reference_LB
+        if (config.contains("warm_LB")) { Configuration::reference_LB = config["warm_LB"]; }
+    }
+    
     if (config.contains("path_to_labels")) { Configuration::path_to_labels = config["path_to_labels"]; }
-
     // If config file specified to use reference model lower bounds, parse the necessary file path:
     if (Configuration::reference_LB) {
         if (!std::ifstream(Configuration::path_to_labels).good()) {
