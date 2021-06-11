@@ -50,8 +50,8 @@ class GOSDT:
         gosdt.configure(json.dumps(self.configuration, separators=(',', ':')))
         result = gosdt.fit(dataset.to_csv(index=False)) # Perform extension call to train the model
 
-        # if gosdt.status() != 0:
-            # raise "Error: GOSDT encountered an error while training"
+        if gosdt.status() != 0:
+            raise "Error: GOSDT encountered an error while training"
 
         result = json.loads(result) # Deserialize result
         self.tree = TreeClassifier(result[0]) # Parse the first result into model
@@ -87,6 +87,7 @@ class GOSDT:
                 self.configuration["theta"] = None
             elif self.configuration["objective"] == "f1":
                 self.configuration["theta"] = None
+                self.configuration["w"] = None
             elif self.configuration["objective"] == "auc":
                 self.configuration["theta"] = None
                 self.configuration["w"] = None
