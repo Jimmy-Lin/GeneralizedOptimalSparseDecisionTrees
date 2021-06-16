@@ -78,8 +78,12 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         }
         #endif
     }
-    for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) { (* iterator).join(); } // Wait for the thread pool to terminate
+    for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) {
+        (* iterator).join(); 
+        std::cout << "elapsed time after (* iterator).join() completes: " << optimizer.elapsed() << std::endl;
+    } // Wait for the thread pool to terminate
 
+    std::cout << "elapsed time according to optimizer (should be very very close to gosdt::time): " << optimizer.elapsed() << std::endl;
     auto stop = std::chrono::high_resolution_clock::now(); // Stop measuring training time
 
     if (getrusage(RUSAGE_SELF, &usage_end)) {
@@ -93,7 +97,7 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         struct timeval delta;
         timersub(&usage_end.ru_utime, &usage_start.ru_utime, &delta);
         GOSDT::ru_utime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
-
+        std::cout << "ru_utime is: " << GOSDT::ru_utime << std::endl;
         timersub(&usage_end.ru_stime, &usage_start.ru_stime, &delta);
         GOSDT::ru_stime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
         GOSDT::ru_maxrss = usage_end.ru_maxrss;
@@ -197,10 +201,12 @@ void GOSDT::work(int const id, Optimizer & optimizer, int & return_reference) {
     unsigned int iterations = 0;
     try {
         while (optimizer.iterate(id)) { iterations += 1; }
+        std::cout << "elapsed time when dones with iterations in GOSDT::work): " << optimizer.elapsed() << std::endl;
     } catch( IntegrityViolation exception ) {
         GOSDT::status = 1;
         std::cout << exception.to_string() << std::endl;
         throw std::move(exception);
     }
     return_reference = iterations;
+    std::cout << "elapsed time when exiting GOSDT::work: " << optimizer.elapsed() << std::endl;
 }
