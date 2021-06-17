@@ -77,15 +77,11 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
             if (error != 0) { std::cerr << "Error calling pthread_setaffinity_np: " << error << std::endl; }
             #endif
         }
-        for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) {
-            (* iterator).join(); 
-            std::cout << "elapsed time after (* iterator).join() completes: " << optimizer.elapsed() << std::endl;
-        } // Wait for the thread pool to terminate
+        for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) { (* iterator).join(); } // Wait for the thread pool to terminate
     }else { 
         work(0, std::ref(optimizer), std::ref(iterations[0]));
     }
 
-    std::cout << "elapsed time according to optimizer (should be very very close to gosdt::time): " << optimizer.elapsed() << std::endl;
     auto stop = std::chrono::high_resolution_clock::now(); // Stop measuring training time
 
     if (getrusage(RUSAGE_SELF, &usage_end)) {
@@ -99,7 +95,6 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         struct timeval delta;
         timersub(&usage_end.ru_utime, &usage_start.ru_utime, &delta);
         GOSDT::ru_utime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
-        std::cout << "ru_utime is: " << GOSDT::ru_utime << std::endl;
         timersub(&usage_end.ru_stime, &usage_start.ru_stime, &delta);
         GOSDT::ru_stime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
         GOSDT::ru_maxrss = usage_end.ru_maxrss;
@@ -176,23 +171,15 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
                 std::cout << "Complexity: " << models.begin() -> complexity() << std::endl;
             }
         }
-        std::cout << "elapsed time before getting loss of model: " << optimizer.elapsed() << std::endl;
         GOSDT::model_loss = models.begin() -> loss();
-        std::cout << "elapsed time after getting model_loss: " << optimizer.elapsed() << std::endl;
         if (Configuration::model != "") {
             json output = json::array();
             for (auto iterator = models.begin(); iterator != models.end(); ++iterator) {
-                std::cout << "iterating, just starting inner loop through models... " << optimizer.elapsed() << std::endl;
                 Model model = * iterator;
-                std::cout << "iterating, got model... " << optimizer.elapsed() << std::endl;
                 json object = json::object();
-                std::cout << "iterating, made object... " << optimizer.elapsed() << std::endl;
                 model.to_json(object);
-                std::cout << "iterating, model.to_json() just finished... " << optimizer.elapsed() << std::endl;
                 output.push_back(object);
-                std::cout << "iterating... " << optimizer.elapsed() << std::endl;
             }
-            std::cout << "!!!Done Iterating: " << optimizer.elapsed() << std::endl;
             std::string result = output.dump(2);
             if(Configuration::verbose) { std::cout << "Storing Models in: " << Configuration::model << std::endl; }
             std::ofstream out(Configuration::model);
@@ -203,9 +190,7 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         GOSDT::status = 1;
         std::cout << exception.to_string() << std::endl;
     }
-    std::cout << "Time just before calling State::reset(): " << optimizer.elapsed() << std::endl;
     State::reset();
-    std::cout << "Time just after calling State::reset(): " << optimizer.elapsed() << std::endl;
 }
 
 
@@ -213,12 +198,10 @@ void GOSDT::work(int const id, Optimizer & optimizer, int & return_reference) {
     unsigned int iterations = 0;
     try {
         while (optimizer.iterate(id)) { iterations += 1; }
-        std::cout << "elapsed time when dones with iterations in GOSDT::work): " << optimizer.elapsed() << std::endl;
     } catch( IntegrityViolation exception ) {
         GOSDT::status = 1;
         std::cout << exception.to_string() << std::endl;
         throw std::move(exception);
     }
     return_reference = iterations;
-    std::cout << "elapsed time when exiting GOSDT::work: " << optimizer.elapsed() << std::endl;
 }
