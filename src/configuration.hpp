@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <json/json.hpp>
+#include "reference.hpp"
 
 using json = nlohmann::json;
 
@@ -28,6 +29,9 @@ public:
     static bool diagnostics; // Flag for printing diagnosis to standard output if a bug is detected
 
     static unsigned char depth_budget; // The maximum tree depth for solutions, counting a tree with just the root node as depth 1. 0 means unlimited.
+    static bool reference_LB; // Flag for using a vector of misclassifications from another (reference) model to lower bound our own misclassifications
+    static std::string path_to_labels; //if reference_LB is true, gives file path to the labels from the reference model. Otherwise, not used
+    //if reference lb is true, configure instantiates the Reference class with the appropriate labels
 
     static bool balance; // Flag for adjusting the importance of each row to equalize the total importance of each class (overrides weight)
     static bool look_ahead; // Flag for enabling the one-step look-ahead bound implemented via scopes

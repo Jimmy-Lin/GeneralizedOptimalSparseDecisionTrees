@@ -19,7 +19,10 @@
 
 #include <json/json.hpp>
 
+#include "encoder.hpp"
+#include "dataset.hpp"
 #include "integrity_violation.hpp"
+#include "model.hpp"
 #include "optimizer.hpp"
 
 using json = nlohmann::json;
@@ -35,6 +38,15 @@ class GOSDT {
         static unsigned int size;
         static unsigned int iterations;
         static unsigned int status;
+        static double lower_bound;
+        static double upper_bound;
+        static float model_loss; //loss of tree(s) returned
+
+        static float  ru_utime;         /* user CPU time used */
+        static float  ru_stime;         /* system CPU time used */
+        static long   ru_maxrss;        /* maximum resident set size in KB */
+        static long   ru_nswap;         /* swaps */
+        static long   ru_nivcsw;        /* involuntary context switches */
 
         // @param config_source: string stream containing a JSON object of configuration parameters
         // @note: See the Configuration class for details about each parameter

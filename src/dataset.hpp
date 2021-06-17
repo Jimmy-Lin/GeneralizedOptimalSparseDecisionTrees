@@ -31,6 +31,7 @@ class Dataset;
 #include "index.hpp"
 #include "state.hpp"
 #include "tile.hpp"
+#include "reference.hpp"
 
 using json = nlohmann::json;
 

@@ -27,7 +27,7 @@ Task::Task(Bitmask const & capture_set, Bitmask const & feature_set, unsigned in
         this -> _upperbound = this -> _base_objective;
         this -> _feature_set.clear();
     } else if (
-        max_loss - min_loss < regularization // Accuracy
+        max_loss - min_loss < regularization // Accuracy (also catches case where min_loss > max_loss, for Configuration::reference_LB)
         || potential < 2 * regularization // Leaf Support
         || terminal
         || (Configuration::depth_budget != 0 && capture_set.get_depth_budget() == 1) // we are using depth constraints, and depth budget is exhausted

@@ -291,30 +291,51 @@ void Dataset::summary(Bitmask const & capture_set, float & info, float & potenti
         }
     }
     float max_cost_reduction = 0.0;
-    float equivalent_point_loss = 0.0;
     float support = (float)(capture_set.count()) / (float)(height());
     float information = 0.0;
 
-    for (int j = depth(); --j >= 0;) { // Class index
-        // maximum cost difference across predictions
-        max_cost_reduction += this -> diff_costs[j] * distribution[j];
+    if (Configuration::reference_LB){
+    //calculate reference model's error on this capture set, use as estimate for min_loss (possible overestimate)
+        float reference_model_loss = 0.0;
+        for (int j = depth(); --j >= 0;) {
+            // maximum cost difference across predictions
+            max_cost_reduction += this -> diff_costs[j] * distribution[j];
 
-        buffer = capture_set; // Set representing the captured points
-        this -> majority.bit_and(buffer, false); // Captured majority points
-        this -> targets.at(j).bit_and(buffer); // Captured majority points with label j
-        equivalent_point_loss += this -> match_costs[j] * buffer.count(); // Calculate frequency
+            buffer = capture_set; // Set representing the captured points
+            this -> targets.at(j).bit_and(buffer, false); // Captured points with label j
+            Reference::labels[j].bit_and(buffer); // Captured points with label j classified correctly by reference model
+            reference_model_loss += this -> match_costs[j] * buffer.count(); // Calculate cost from correct classifications on j
 
-        buffer = capture_set; // Set representing the captured points
-        this -> majority.bit_and(buffer, true); // Captured minority points
-        this -> targets.at(j).bit_and(buffer); // Captured minority points with label j
-        equivalent_point_loss += this -> mismatch_costs[j] * buffer.count(); // Calculate frequency
+            buffer = capture_set; // Set representing the captured points
+            this -> targets.at(j).bit_and(buffer, false); // Captured points with label j
+            Reference::labels[j].bit_and(buffer, true); // Captured points with label j classified incorrectly by reference model
+            reference_model_loss += this -> mismatch_costs[j] * buffer.count(); // Calculate frequency  
+        }
+        min_loss = reference_model_loss; 
+    } else {
+    //calculate equivalent point loss for this capture set, use as min_loss
+        float equivalent_point_loss = 0.0;
+        for (int j = depth(); --j >= 0;) { // Class index
+            // maximum cost difference across predictions
+            max_cost_reduction += this -> diff_costs[j] * distribution[j];
 
-        float prob = distribution[j];
-        if (prob > 0) { information += support * prob * (log(prob) - log(support)); }
+            buffer = capture_set; // Set representing the captured points
+            this -> majority.bit_and(buffer, false); // Captured majority points
+            this -> targets.at(j).bit_and(buffer); // Captured majority points with label j
+            equivalent_point_loss += this -> match_costs[j] * buffer.count(); // Calculate frequency
+
+            buffer = capture_set; // Set representing the captured points
+            this -> majority.bit_and(buffer, true); // Captured minority points
+            this -> targets.at(j).bit_and(buffer); // Captured minority points with label j
+            equivalent_point_loss += this -> mismatch_costs[j] * buffer.count(); // Calculate frequency
+
+            float prob = distribution[j];
+            if (prob > 0) { information += support * prob * (log(prob) - log(support)); }
+        }
+        min_loss = equivalent_point_loss;
     }
 
     potential = max_cost_reduction;
-    min_loss = equivalent_point_loss;
     max_loss = min_cost;
     info = information;
     target_index = cost_minimizer;

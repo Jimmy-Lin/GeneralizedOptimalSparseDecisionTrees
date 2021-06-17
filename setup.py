@@ -16,8 +16,8 @@ os.environ["CC"] = "g++"
 os.environ["CXX"] = "g++"
 
 # Standard Build Configuration
-OPTIMIZATION = ['-O3']
-STD = ['-std=c++11']
+OPTIMIZATION = ['-O3', "-march=native"]
+STD = ['-std=gnu++11']
 INCLUDES = ['-I', 'include']
 
 # Platform Specific Build Configuration
