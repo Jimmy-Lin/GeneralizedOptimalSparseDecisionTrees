@@ -67,21 +67,23 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
     auto start = std::chrono::high_resolution_clock::now();
 
     optimizer.initialize();
-    for (unsigned int i = 0; i < Configuration::worker_limit; ++i) {
-        workers.emplace_back(work, i, std::ref(optimizer), std::ref(iterations[i]));
-        #ifndef __APPLE__
-        if (Configuration::worker_limit > 1) {
+    if (Configuration::worker_limit > 1) {
+        for (unsigned int i = 0; i < Configuration::worker_limit; ++i) {
+            workers.emplace_back(work, i, std::ref(optimizer), std::ref(iterations[i]));
+            #ifndef __APPLE__
             // If using Ubuntu Build, we can pin each thread to a specific CPU core to improve cache locality
             cpu_set_t cpuset; CPU_ZERO(&cpuset); CPU_SET(i, &cpuset);
             int error = pthread_setaffinity_np(workers[i].native_handle(), sizeof(cpu_set_t), &cpuset);
             if (error != 0) { std::cerr << "Error calling pthread_setaffinity_np: " << error << std::endl; }
+            #endif
         }
-        #endif
+        for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) {
+            (* iterator).join(); 
+            std::cout << "elapsed time after (* iterator).join() completes: " << optimizer.elapsed() << std::endl;
+        } // Wait for the thread pool to terminate
+    }else { 
+        work(0, std::ref(optimizer), std::ref(iterations[0]));
     }
-    for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) {
-        (* iterator).join(); 
-        std::cout << "elapsed time after (* iterator).join() completes: " << optimizer.elapsed() << std::endl;
-    } // Wait for the thread pool to terminate
 
     std::cout << "elapsed time according to optimizer (should be very very close to gosdt::time): " << optimizer.elapsed() << std::endl;
     auto stop = std::chrono::high_resolution_clock::now(); // Stop measuring training time
@@ -174,15 +176,23 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
                 std::cout << "Complexity: " << models.begin() -> complexity() << std::endl;
             }
         }
+        std::cout << "elapsed time before getting loss of model: " << optimizer.elapsed() << std::endl;
         GOSDT::model_loss = models.begin() -> loss();
+        std::cout << "elapsed time after getting model_loss: " << optimizer.elapsed() << std::endl;
         if (Configuration::model != "") {
             json output = json::array();
             for (auto iterator = models.begin(); iterator != models.end(); ++iterator) {
+                std::cout << "iterating, just starting inner loop through models... " << optimizer.elapsed() << std::endl;
                 Model model = * iterator;
+                std::cout << "iterating, got model... " << optimizer.elapsed() << std::endl;
                 json object = json::object();
+                std::cout << "iterating, made object... " << optimizer.elapsed() << std::endl;
                 model.to_json(object);
+                std::cout << "iterating, model.to_json() just finished... " << optimizer.elapsed() << std::endl;
                 output.push_back(object);
+                std::cout << "iterating... " << optimizer.elapsed() << std::endl;
             }
+            std::cout << "!!!Done Iterating: " << optimizer.elapsed() << std::endl;
             std::string result = output.dump(2);
             if(Configuration::verbose) { std::cout << "Storing Models in: " << Configuration::model << std::endl; }
             std::ofstream out(Configuration::model);
@@ -193,7 +203,9 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         GOSDT::status = 1;
         std::cout << exception.to_string() << std::endl;
     }
+    std::cout << "Time just before calling State::reset(): " << optimizer.elapsed() << std::endl;
     State::reset();
+    std::cout << "Time just after calling State::reset(): " << optimizer.elapsed() << std::endl;
 }
 
 
