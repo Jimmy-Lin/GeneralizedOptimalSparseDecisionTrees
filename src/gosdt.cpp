@@ -79,7 +79,7 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         }
         for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) { (* iterator).join(); } // Wait for the thread pool to terminate
     }else { 
-        work(0, std::ref(optimizer), std::ref(iterations[0]));
+        work(0, optimizer, iterations[0]);
     }
 
     auto stop = std::chrono::high_resolution_clock::now(); // Stop measuring training time
