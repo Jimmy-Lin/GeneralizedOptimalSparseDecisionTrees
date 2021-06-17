@@ -97,7 +97,6 @@ bool Optimizer::iterate(unsigned int id) {
             this -> active = !complete() && !timeout() && (Configuration::worker_limit > 1 || State::queue.size() > 0);
             this -> print();
             this -> profile();
-            if (!(this -> active)){std::cout << "after profile(), elapsed time is: " << elapsed() << std::endl;}
         }
     }
     return this -> active;
