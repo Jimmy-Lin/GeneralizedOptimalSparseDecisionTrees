@@ -137,7 +137,7 @@ void Task::prune_features(unsigned int id) {
             if (lower > this -> _upperscope) { continue; }
             if (upper < this -> _upperbound) { this -> _optimal_feature = j; }
             this -> _lowerbound = std::min(this -> _lowerbound, lower);
-            this -> _upperbound = std::min(this -> _upperbound, upper);
+            this -> _upperbound = std::min(this -> _upperbound, upper); //find way to resolve if upper < lowerbound? 
         }
     }
 }
@@ -267,7 +267,7 @@ bool Task::update(float lower, float upper, int optimal_feature) {
     this -> _optimal_feature = optimal_feature;
 
     float regularization = Configuration::regularization;
-    if ((Configuration::cancellation && 1.0 - this -> _lowerbound < 0.0)
+    if ((Configuration::cancellation && 1.0 - this -> _lowerbound < 0.0) //TODO: investigate whether this first condition is ever true
         || this -> _upperbound - this -> _lowerbound <= std::numeric_limits<float>::epsilon()) {
         this -> _lowerbound = this -> _upperbound;
     }

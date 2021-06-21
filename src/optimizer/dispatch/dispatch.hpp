@@ -19,7 +19,7 @@ bool Optimizer::dispatch(Message const & message, unsigned int id) {
             vertex_accessor vertex;
             bool inserted = store_self(task.identifier(), task, vertex);
 
-            store_children(vertex -> second, id);
+            store_children(vertex -> second, id); //vertex -> second is the task
 
             if (is_root) { // Update the optimizer state
                 // float root_upperbound = this -> cart(vertex -> second.capture_set(), vertex -> second.feature_set(), id);
@@ -234,9 +234,9 @@ void Optimizer::link_to_parent(Tile const & parent, Bitmask const & features, Bi
 void Optimizer::signal_exploiters(adjacency_accessor & parents, Task & self, unsigned int id) {
     if (self.uncertainty() != 0 && self.lowerbound() < self.lowerscope() - std::numeric_limits<float>::epsilon()) { return; }
     for (adjacency_iterator iterator = parents -> second.begin(); iterator != parents -> second.end(); ++iterator) {
-        if (iterator -> second.first.count() == 0) { continue; }
-        if (self.lowerbound() < iterator -> second.second - std::numeric_limits<float>::epsilon() && self.uncertainty() > 0) { continue; }
-        State::locals[id].outbound_message.exploitation(
+        if (iterator -> second.first.count() == 0) { continue; } //
+        if (self.lowerbound() < iterator -> second.second - std::numeric_limits<float>::epsilon() && self.uncertainty() > 0) { continue; } //TODO: investigate whether we should still send updates on upperbound decreases without change to lowerbound. May help to prune other features?
+        State::locals[id].outbound_message.exploitation( //TODO: investigate whether we sometimes need to send exploration messages if the lower bound decreases (so that the other child in a split doesn't have incorrect scope information)
             self.identifier(), // sender tile
             iterator -> first, // recipient tile
             iterator -> second.first, // recipient features
