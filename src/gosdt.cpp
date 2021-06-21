@@ -67,18 +67,20 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
     auto start = std::chrono::high_resolution_clock::now();
 
     optimizer.initialize();
-    for (unsigned int i = 0; i < Configuration::worker_limit; ++i) {
-        workers.emplace_back(work, i, std::ref(optimizer), std::ref(iterations[i]));
-        #ifndef __APPLE__
-        if (Configuration::worker_limit > 1) {
+    if (Configuration::worker_limit > 1) {
+        for (unsigned int i = 0; i < Configuration::worker_limit; ++i) {
+            workers.emplace_back(work, i, std::ref(optimizer), std::ref(iterations[i]));
+            #ifndef __APPLE__
             // If using Ubuntu Build, we can pin each thread to a specific CPU core to improve cache locality
             cpu_set_t cpuset; CPU_ZERO(&cpuset); CPU_SET(i, &cpuset);
             int error = pthread_setaffinity_np(workers[i].native_handle(), sizeof(cpu_set_t), &cpuset);
             if (error != 0) { std::cerr << "Error calling pthread_setaffinity_np: " << error << std::endl; }
+            #endif
         }
-        #endif
+        for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) { (* iterator).join(); } // Wait for the thread pool to terminate
+    }else { 
+        work(0, optimizer, iterations[0]);
     }
-    for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) { (* iterator).join(); } // Wait for the thread pool to terminate
 
     auto stop = std::chrono::high_resolution_clock::now(); // Stop measuring training time
 
@@ -93,7 +95,6 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         struct timeval delta;
         timersub(&usage_end.ru_utime, &usage_start.ru_utime, &delta);
         GOSDT::ru_utime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
-
         timersub(&usage_end.ru_stime, &usage_start.ru_stime, &delta);
         GOSDT::ru_stime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
         GOSDT::ru_maxrss = usage_end.ru_maxrss;
