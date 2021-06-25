@@ -78,8 +78,8 @@ void Task::scope(float new_scope) {
 void Task::prune_feature(unsigned int index) { this -> _feature_set.set(index, false); }
 
 void Task::create_children(unsigned int id) {    
-    this -> _lowerbound = this -> _base_objective;
-    this -> _upperbound = this -> _base_objective;
+    //this -> _lowerbound = this -> _base_objective; TODO: figure out why this line is present - caused the task lowerbound to be left as an overestimate at end of fn call
+    //this -> _upperbound = this -> _base_objective;
     Bitmask & buffer = State::locals[id].columns[0];
     bool conditions[2] = {false, true};
     Bitmask const & features = this -> _feature_set;
@@ -107,6 +107,7 @@ void Task::prune_features(unsigned int id) {
     if (Configuration::continuous_feature_exchange) { continuous_feature_exchange(id); }
     if (Configuration::feature_exchange) { feature_exchange(id); }
 
+    /* TODO - confirm the below code is not necessary - we do something similar in dispatch when processing exploration messages
     this -> _lowerbound = this -> _base_objective;
     this -> _upperbound = this -> _base_objective;
     Bitmask & buffer = State::locals[id].columns[0];
@@ -139,7 +140,7 @@ void Task::prune_features(unsigned int id) {
             this -> _lowerbound = std::min(this -> _lowerbound, lower);
             this -> _upperbound = std::min(this -> _upperbound, upper); //find way to resolve if upper < lowerbound? 
         }
-    }
+    }*/
 }
 
 void Task::continuous_feature_exchange(unsigned int id) {

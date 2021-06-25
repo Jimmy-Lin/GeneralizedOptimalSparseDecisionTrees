@@ -11,7 +11,7 @@ bool Optimizer::dispatch(Message const & message, unsigned int id) {
             Task task(capture_set, feature_set, id); // A vertex to represent the problem
             task.scope(message.scope);
             task.create_children(id); // Populate the thread's local cache with child instances
-            task.prune_features(id);  // Prune using a set of bounds
+            if (Configuration::feature_exchange || Configuration::continuous_feature_exchange) { task.prune_features(id); } // Prune using a set of bounds
             translation_type order;
             State::dataset.tile(task.capture_set(), task.feature_set(), task.identifier(), task.order(), id);
 
