@@ -190,7 +190,6 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
         GOSDT::status = 1;
         std::cout << exception.to_string() << std::endl;
     }
-    State::reset();
 }
 
 
