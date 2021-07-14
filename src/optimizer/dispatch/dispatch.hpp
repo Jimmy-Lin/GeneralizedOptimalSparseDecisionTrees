@@ -171,7 +171,7 @@ bool Optimizer::store_self(Tile const & identifier, Task const & value, vertex_a
     return State::graph.vertices.insert(self, std::make_pair(identifier, value));
 }
 
-void Optimizer::store_children(Task & task, unsigned int id) {
+void Optimizer::store_children(Task & task, unsigned int id) { //XXX why is this called store_children when it just updates bounds?
     bound_accessor bounds;
     bool inserted = State::graph.bounds.insert(bounds, task.identifier());
     if (!inserted) { return; }
