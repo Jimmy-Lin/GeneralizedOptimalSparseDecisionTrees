@@ -234,7 +234,7 @@ void Optimizer::link_to_parent(Tile const & parent, Bitmask const & features, Bi
 void Optimizer::signal_exploiters(adjacency_accessor & parents, Task & self, unsigned int id) {
     if (self.uncertainty() != 0 && self.lowerbound() < self.lowerscope() - std::numeric_limits<float>::epsilon()) { return; }
     for (adjacency_iterator iterator = parents -> second.begin(); iterator != parents -> second.end(); ++iterator) {
-        if (iterator -> second.first.count() == 0) { continue; } //
+        if (iterator -> second.first.count() == 0) { continue; }
         if (self.lowerbound() < iterator -> second.second - std::numeric_limits<float>::epsilon() && self.uncertainty() > 0) { continue; }
         State::locals[id].outbound_message.exploitation(
             self.identifier(), // sender tile
