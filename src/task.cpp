@@ -106,41 +106,6 @@ void Task::create_children(unsigned int id) {
 void Task::prune_features(unsigned int id) {
     if (Configuration::continuous_feature_exchange) { continuous_feature_exchange(id); }
     if (Configuration::feature_exchange) { feature_exchange(id); }
-
-    /* TODO - confirm the below code is not necessary - we do something similar in dispatch when processing exploration messages
-    this -> _lowerbound = this -> _base_objective;
-    this -> _upperbound = this -> _base_objective;
-    Bitmask & buffer = State::locals[id].columns[0];
-    bool conditions[2] = {false, true};
-    Bitmask const & features = this -> _feature_set;
-    for (int j_begin = 0, j_end = 0; features.scan_range(true, j_begin, j_end); j_begin = j_end) {
-        for (int j = j_begin; j < j_end; ++j) {
-            float lower = 0.0, upper = 0.0;
-            
-            Task & left = State::locals[id].neighbourhood[2 * j];
-            Task & right = State::locals[id].neighbourhood[2 * j + 1];
-
-            if (Configuration::rule_list) {
-                float lower_negative = left.base_objective() + right.lowerbound();
-                float lower_positive = left.lowerbound() + right.base_objective();
-                lower = std::min(lower_negative, lower_positive);
-                float upper_negative = left.base_objective() + right.upperbound();
-                float upper_positive = left.upperbound() + right.base_objective();
-                upper = std::min(upper_negative, upper_positive);
-            } else {
-                lower = left.lowerbound() + right.lowerbound();
-                upper = left.upperbound() + right.upperbound();
-            }
-
-            // std::cout << "Split: " << j << ", Bound: [" << left.lowerbound() << " + " << right.lowerbound()  << ", " << left.upperbound() << " + " << right.upperbound() << "]" << std::endl;
-            // std::cout << "Split: " << j << ", Bound: [" << lower  << ", " << upper << "]" << std::endl;
-
-            if (lower > this -> _upperscope) { continue; }
-            if (upper < this -> _upperbound) { this -> _optimal_feature = j; }
-            this -> _lowerbound = std::min(this -> _lowerbound, lower);
-            this -> _upperbound = std::min(this -> _upperbound, upper); //find way to resolve if upper < lowerbound? 
-        }
-    }*/
 }
 
 void Task::continuous_feature_exchange(unsigned int id) {
