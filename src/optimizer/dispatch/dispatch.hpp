@@ -19,7 +19,7 @@ bool Optimizer::dispatch(Message const & message, unsigned int id) {
             vertex_accessor vertex;
             bool inserted = store_self(task.identifier(), task, vertex);
 
-            store_children(vertex -> second, id); //vertex -> second is the task
+            store_children(vertex -> second, id);
 
             if (is_root) { // Update the optimizer state
                 // float root_upperbound = this -> cart(vertex -> second.capture_set(), vertex -> second.feature_set(), id);
@@ -171,7 +171,7 @@ bool Optimizer::store_self(Tile const & identifier, Task const & value, vertex_a
     return State::graph.vertices.insert(self, std::make_pair(identifier, value));
 }
 
-void Optimizer::store_children(Task & task, unsigned int id) { //XXX why is this called store_children when it just updates bounds?
+void Optimizer::store_children(Task & task, unsigned int id) {
     bound_accessor bounds;
     bool inserted = State::graph.bounds.insert(bounds, task.identifier());
     if (!inserted) { return; }
@@ -235,8 +235,8 @@ void Optimizer::signal_exploiters(adjacency_accessor & parents, Task & self, uns
     if (self.uncertainty() != 0 && self.lowerbound() < self.lowerscope() - std::numeric_limits<float>::epsilon()) { return; }
     for (adjacency_iterator iterator = parents -> second.begin(); iterator != parents -> second.end(); ++iterator) {
         if (iterator -> second.first.count() == 0) { continue; } //
-        if (self.lowerbound() < iterator -> second.second - std::numeric_limits<float>::epsilon() && self.uncertainty() > 0) { continue; } //TODO: investigate whether we should still send updates on upperbound decreases without change to lowerbound. May help to prune other features?
-        State::locals[id].outbound_message.exploitation( //TODO: investigate whether we sometimes need to send exploration messages if the lower bound decreases (so that the other child in a split doesn't have incorrect scope information)
+        if (self.lowerbound() < iterator -> second.second - std::numeric_limits<float>::epsilon() && self.uncertainty() > 0) { continue; }
+        State::locals[id].outbound_message.exploitation(
             self.identifier(), // sender tile
             iterator -> first, // recipient tile
             iterator -> second.first, // recipient features
