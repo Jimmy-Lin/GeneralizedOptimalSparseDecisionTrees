@@ -11,7 +11,7 @@ bool Optimizer::dispatch(Message const & message, unsigned int id) {
             Task task(capture_set, feature_set, id); // A vertex to represent the problem
             task.scope(message.scope);
             task.create_children(id); // Populate the thread's local cache with child instances
-            task.prune_features(id);  // Prune using a set of bounds
+            if (Configuration::feature_exchange || Configuration::continuous_feature_exchange) { task.prune_features(id); } // Prune using a set of bounds
             translation_type order;
             State::dataset.tile(task.capture_set(), task.feature_set(), task.identifier(), task.order(), id);
 
@@ -234,7 +234,7 @@ void Optimizer::link_to_parent(Tile const & parent, Bitmask const & features, Bi
 void Optimizer::signal_exploiters(adjacency_accessor & parents, Task & self, unsigned int id) {
     if (self.uncertainty() != 0 && self.lowerbound() < self.lowerscope() - std::numeric_limits<float>::epsilon()) { return; }
     for (adjacency_iterator iterator = parents -> second.begin(); iterator != parents -> second.end(); ++iterator) {
-        if (iterator -> second.first.count() == 0) { continue; }
+        if (iterator -> second.first.count() == 0) { continue; } //
         if (self.lowerbound() < iterator -> second.second - std::numeric_limits<float>::epsilon() && self.uncertainty() > 0) { continue; }
         State::locals[id].outbound_message.exploitation(
             self.identifier(), // sender tile
