@@ -1,0 +1,10 @@
+{
+  "warm_LB": true, 
+  "path_to_labels": "nonconvergence_labels.csv",
+  "regularization": 0.005,
+  "depth_budget": 0,
+  "time_limit": 1800,
+  "verbose": true,
+  "similar_support": false,
+  "strong_indifference": false
+}

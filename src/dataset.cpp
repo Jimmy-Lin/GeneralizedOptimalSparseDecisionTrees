@@ -267,7 +267,7 @@ void Dataset::subset(unsigned int feature_index, Bitmask & negative, Bitmask & p
     } //subproblems have one less depth_budget than their parent
 }
 
-void Dataset::summary(Bitmask const & capture_set, float & info, float & potential, float & min_loss, float & max_loss, unsigned int & target_index, unsigned int id) const {
+void Dataset::summary(Bitmask const & capture_set, float & info, float & potential, float & min_loss, float & guaranteed_min_loss, float & max_loss, unsigned int & target_index, unsigned int id) const {
     Bitmask & buffer = State::locals[id].columns[0];
     unsigned int * distribution; // The frequencies of each class
     distribution = (unsigned int *) alloca(sizeof(unsigned int) * depth());
@@ -294,6 +294,38 @@ void Dataset::summary(Bitmask const & capture_set, float & info, float & potenti
     float support = (float)(capture_set.count()) / (float)(height());
     float information = 0.0;
 
+    //calculate equivalent point loss for this capture set
+    float equivalent_point_loss = 0.0;
+    for (int j = depth(); --j >= 0;) { // Class index
+        // maximum cost difference across predictions
+        max_cost_reduction += this -> diff_costs[j] * distribution[j];
+
+        buffer = capture_set; // Set representing the captured points
+        this -> majority.bit_and(buffer, false); // Captured majority points
+        this -> targets.at(j).bit_and(buffer); // Captured majority points with label j
+        equivalent_point_loss += this -> match_costs[j] * buffer.count(); // Calculate frequency
+
+        buffer = capture_set; // Set representing the captured points
+        this -> majority.bit_and(buffer, true); // Captured minority points
+        this -> targets.at(j).bit_and(buffer); // Captured minority points with label j
+        equivalent_point_loss += this -> mismatch_costs[j] * buffer.count(); // Calculate frequency
+
+        float prob = distribution[j];
+        if (prob > 0) { information += support * prob * (log(prob) - log(support)); }
+    }
+
+    // use equivalent points as a guaranteed lowerbound, regardless of whether we are using a refence model to guess lower bounds
+    // (although most implications of a guessed lower bound are acceptable, we still want the guaranteed lower bound for scoping,
+    //  since we do not wish to narrow one subproblem's scope based on an overestimate for the lower bound of another subproblem)
+    guaranteed_min_loss = equivalent_point_loss;
+    
+    // because we are using floating point calculations, we might have our guaranteed_min_loss > max_loss in cases where they should be the same
+    // To avoid contradictions and maintain the invariant that guaranteed_min_loss <= max_loss, we correct for that here. 
+    if (guaranteed_min_loss > max_loss){
+        guaranteed_min_loss = max_loss;
+    }
+
+
     if (Configuration::reference_LB){
     //calculate reference model's error on this capture set, use as estimate for min_loss (possible overestimate)
         float reference_model_loss = 0.0;
@@ -313,26 +345,9 @@ void Dataset::summary(Bitmask const & capture_set, float & info, float & potenti
         }
         min_loss = reference_model_loss; 
     } else {
-    //calculate equivalent point loss for this capture set, use as min_loss
-        float equivalent_point_loss = 0.0;
-        for (int j = depth(); --j >= 0;) { // Class index
-            // maximum cost difference across predictions
-            max_cost_reduction += this -> diff_costs[j] * distribution[j];
-
-            buffer = capture_set; // Set representing the captured points
-            this -> majority.bit_and(buffer, false); // Captured majority points
-            this -> targets.at(j).bit_and(buffer); // Captured majority points with label j
-            equivalent_point_loss += this -> match_costs[j] * buffer.count(); // Calculate frequency
-
-            buffer = capture_set; // Set representing the captured points
-            this -> majority.bit_and(buffer, true); // Captured minority points
-            this -> targets.at(j).bit_and(buffer); // Captured minority points with label j
-            equivalent_point_loss += this -> mismatch_costs[j] * buffer.count(); // Calculate frequency
-
-            float prob = distribution[j];
-            if (prob > 0) { information += support * prob * (log(prob) - log(support)); }
-        }
-        min_loss = equivalent_point_loss;
+        // when not using a reference model, we do not want min_loss to be an overestimate
+        // so we set min_loss to match guaranteed_min_loss
+        min_loss = guaranteed_min_loss;
     }
 
     potential = max_cost_reduction;

@@ -66,10 +66,12 @@ public:
     // @param id: Index of the local state entry used when a column buffer is needed
     // @modifies info: The alkaike information critierion of this set w.r.t the target distribution
     // @modifies potential: The maximum reduction in loss if all equivalent classes are relabelled (without considering complexity penalty)
-    // @modifies min_loss: The minimal loss incurred if all equivalent classes are optimally labelled without considering complexity penalty
+    // @modifies min_loss: an estimate of the minimal loss we could incur, without considering complexity penalty 
+    //                     (estimated if Configuration:reference_LB is true, else matches guaranteed_min_loss) 
+    // @modifies guaranteed_min_loss: The minimal loss incurred if all equivalent classes are optimally labelled without considering complexity penalty
     // @modifies max_loss: The loss incurred if the capture set is left unsplit and the best single label is chosen
     // @modifies target_index: The label to choose if left unsplit
-    void summary(Bitmask const & capture_set, float & info, float & potential, float & min_loss, float & max_loss, unsigned int & target_index, unsigned int id) const;
+    void summary(Bitmask const & capture_set, float & info, float & potential, float & min_loss, float & guaranteed_min_loss, float & max_loss, unsigned int & target_index, unsigned int id) const;
 
     // @param feature_index: the index of the binary feature to use bisect the set
     // @param positive: if true, modifies set to reflect the part of the bisection that responds positive to the binary feature

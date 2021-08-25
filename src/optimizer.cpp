@@ -133,9 +133,9 @@ void Optimizer::profile(void) {
 float Optimizer::cart(Bitmask const & capture_set, Bitmask const & feature_set, unsigned int id) const {
     Bitmask left(State::dataset.height());
     Bitmask right(State::dataset.height());
-    float potential, min_loss, max_loss, base_info;
+    float potential, min_loss, guaranteed_min_loss, max_loss, base_info;
     unsigned int target_index;
-    State::dataset.summary(capture_set, base_info, potential, min_loss, max_loss, target_index, id);
+    State::dataset.summary(capture_set, base_info, potential, min_loss, guaranteed_min_loss, max_loss, target_index, id);
     float base_risk = max_loss + Configuration::regularization;
 
     if (max_loss - min_loss < Configuration::regularization
@@ -157,8 +157,8 @@ float Optimizer::cart(Bitmask const & capture_set, Bitmask const & feature_set, 
 
             if (left.empty() || right.empty()) { continue; }
 
-            State::dataset.summary(capture_set, left_info, potential, min_loss, max_loss, target_index, id);
-            State::dataset.summary(capture_set, right_info, potential, min_loss, max_loss, target_index, id);
+            State::dataset.summary(capture_set, left_info, potential, min_loss, guaranteed_min_loss, max_loss, target_index, id);
+            State::dataset.summary(capture_set, right_info, potential, min_loss, guaranteed_min_loss, max_loss, target_index, id);
 
             float gain = left_info + right_info - base_info;
             if (gain > information_gain) {

@@ -35,6 +35,11 @@ public:
     // @returns the objective lowerbound of this task
     float lowerbound(void) const;
 
+    // @returns the lowerbound, without allowing the use of guesses for the lower bound 
+    // (which could be overestimates). Currently, only differs from lowerbound() 
+    // if Configuration::warm_LB is true. 
+    double guaranteed_lowerbound(void);
+
     // @return the objective upperbound of this task
     float upperbound(void) const;
 
@@ -97,6 +102,10 @@ private:
 
     float _lowerbound = -std::numeric_limits<float>::max();
     float _upperbound = std::numeric_limits<float>::max();
+
+    // When Configuration::reference_LB is true, _lowerbound is no longer a provable lower bound
+    // we use the below variable to track a provable lower bound in this case. 
+    float _guaranteed_lowerbound = -std::numeric_limits<float>::max(); 
 
     float _context_lowerbound = 0.0;
     float _context_upperbound = 0.0;

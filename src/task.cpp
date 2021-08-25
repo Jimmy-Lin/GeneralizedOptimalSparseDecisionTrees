@@ -9,16 +9,21 @@ Task::Task(Bitmask const & capture_set, Bitmask const & feature_set, unsigned in
     float const regularization = Configuration::regularization;
     bool terminal = (this -> _capture_set.count() <= 1) || (this -> _feature_set.empty());
 
-    float potential, min_loss, max_loss;
+    float potential, min_loss, guaranteed_min_loss, max_loss;
     unsigned int target_index;
     // Careful, the following method modifies capture_set
-    State::dataset.summary(this -> _capture_set, this -> _information, potential, min_loss, max_loss, target_index, id);
+    State::dataset.summary(this -> _capture_set, this -> _information, potential, min_loss, guaranteed_min_loss, max_loss, target_index, id);
 
-    this -> _base_objective = max_loss + regularization;
-    // Add lambda because we know this has at least 2 leaves
+    this -> _base_objective = max_loss + regularization; //add 1*regularization because the max loss still uses one leaf
+    // Since _base_objective corresponds to the best tree with just one leaf, any tree with a better objective must use at least 2 leaves.
+    // So we add 2*regularization to the min_loss in the calculation below
     float const lowerbound = std::min(this -> _base_objective, min_loss + 2 * regularization);
     float const upperbound = this -> _base_objective;
 
+    // _guaranteed_lowerbound is a similar calculation to lowerbound, but using guaranteed min loss
+    this -> _guaranteed_lowerbound = std::min(this -> _base_objective, guaranteed_min_loss + 2 * regularization);
+
+    // use lowerbound and upperbound to decide whether further splits are possible
     if ( (1.0 - min_loss < regularization ) // Insufficient maximum accuracy
         || ( potential < 2 * regularization && (1.0 - max_loss) < regularization) ) // Leaf Support + Incremental Accuracy
     { // Insufficient support and leaf accuracy
@@ -62,6 +67,10 @@ float Task::lowerbound(void) const { return this -> _lowerbound; }
 float Task::upperbound(void) const { return this -> _upperbound; }
 float Task::lowerscope(void) const { return this -> _lowerscope; }
 float Task::upperscope(void) const { return this -> _upperscope; }
+
+double Task::guaranteed_lowerbound(void) { 
+    return (Configuration::reference_LB)? this -> _guaranteed_lowerbound : this -> _lowerbound;
+}
 
 Bitmask const & Task::capture_set(void) const { return this -> _capture_set; }
 Bitmask const & Task::feature_set(void) const { return this -> _feature_set; }
@@ -183,8 +192,8 @@ void Task::send_explorers(float new_scope, unsigned int id) {
                 send_explorer(left, exploration_boundary - right.base_objective(), -(j + 1), id);
                 send_explorer(right, exploration_boundary - left.base_objective(), (j + 1), id);
             } else {
-                send_explorer(left, exploration_boundary - right.lowerbound(), -(j + 1), id);
-                send_explorer(right, exploration_boundary - left.lowerbound(), (j + 1), id);
+                send_explorer(left, exploration_boundary - right.guaranteed_lowerbound(), -(j + 1), id);
+                send_explorer(right, exploration_boundary - left.guaranteed_lowerbound(), (j + 1), id);
             }
         }
     }
