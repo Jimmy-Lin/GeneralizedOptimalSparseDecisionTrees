@@ -69,7 +69,7 @@ float Task::lowerscope(void) const { return this -> _lowerscope; }
 float Task::upperscope(void) const { return this -> _upperscope; }
 
 double Task::guaranteed_lowerbound(void) { 
-    return (Configuration::warm_LB)? this -> _guaranteed_lowerbound : this -> _lowerbound;
+    return (Configuration::reference_LB)? this -> _guaranteed_lowerbound : this -> _lowerbound;
 }
 
 Bitmask const & Task::capture_set(void) const { return this -> _capture_set; }
