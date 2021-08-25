@@ -78,16 +78,16 @@ void Optimizer::models(key_type const & identifier, std::unordered_set< Model *,
         if (negatives.size() == 0 || positives.size() == 0) { continue; }
         
         if (Configuration::rule_list) {
-            float potential, min_loss, info, left_leaf_risk, right_leaf_risk;
+            float potential, min_loss, guaranteed_min_loss, info, left_leaf_risk, right_leaf_risk;
             unsigned int target_index;
             Bitmask negative_subset(State::dataset.height());
             Bitmask positive_subset(State::dataset.height());
             negative_subset = task.capture_set();
             State::dataset.subset(feature, false, negative_subset);
-            State::dataset.summary(negative_subset, info, potential, min_loss, left_leaf_risk, target_index, 0);
+            State::dataset.summary(negative_subset, info, potential, min_loss, guaranteed_min_loss, left_leaf_risk, target_index, 0);
             positive_subset = task.capture_set();
             State::dataset.subset(feature, true, positive_subset);
-            State::dataset.summary(positive_subset, info, potential, min_loss, right_leaf_risk, target_index, 0);
+            State::dataset.summary(positive_subset, info, potential, min_loss, guaranteed_min_loss, right_leaf_risk, target_index, 0);
 
             left_leaf_risk += Configuration::regularization;
             right_leaf_risk += Configuration::regularization;

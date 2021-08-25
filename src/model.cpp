@@ -4,9 +4,9 @@ Model::Model(void) {}
 
 Model::Model(std::shared_ptr<Bitmask> capture_set) {
     std::string prediction_name, prediction_type, prediction_value;
-    float info, potential, min_loss, max_loss;
+    float info, potential, min_loss, guaranteed_min_loss, max_loss;
     unsigned int target_index;
-    State::dataset.summary(* capture_set, info, potential, min_loss, max_loss, target_index, 0);
+    State::dataset.summary(* capture_set, info, potential, min_loss, guaranteed_min_loss, max_loss, target_index, 0);
     State::dataset.encoder.target_value(target_index, prediction_value);
     State::dataset.encoder.header(prediction_name);
     State::dataset.encoder.target_type(prediction_type);
