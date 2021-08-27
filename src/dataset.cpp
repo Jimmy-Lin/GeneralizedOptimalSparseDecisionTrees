@@ -321,8 +321,9 @@ void Dataset::summary(Bitmask const & capture_set, float & info, float & potenti
     
     // because we are using floating point calculations, we might have our guaranteed_min_loss > max_loss in cases where they should be the same
     // To avoid contradictions and maintain the invariant that guaranteed_min_loss <= max_loss, we correct for that here. 
-    if (guaranteed_min_loss > max_loss){
-        guaranteed_min_loss = max_loss;
+    // (note that min_cost is the same as max_loss)
+    if (guaranteed_min_loss > min_cost){
+        guaranteed_min_loss = min_cost;
     }
 
 
