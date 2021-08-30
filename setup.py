@@ -15,8 +15,12 @@ import platform
 os.environ["CC"] = "g++"
 os.environ["CXX"] = "g++"
 
+if "GOSDT_BUILD_OPT_FLAGS" in os.environ :
+    OPTIMIZATION = os.environ['GOSDT_BUILD_OPT_FLAGS'].split(";")
+else :
+    OPTIMIZATION = ['-O3', "-march=native"]
+
 # Standard Build Configuration
-OPTIMIZATION = ['-O3', "-march=native"]
 STD = ['-std=gnu++11']
 INCLUDES = ['-I', 'include']
 
@@ -24,16 +28,14 @@ INCLUDES = ['-I', 'include']
 if platform.system() == "Darwin":
     STDLIB = ['-stdlib=libc++']
     TBB_LIBS = ['-ltbb', '-ltbbmalloc']
-    CL_LIBS = ['-framework', 'OpenCL']
     GMP_LIBS = ['-lgmp']
 elif platform.system() == "Linux":
     STDLIB = []
     TBB_LIBS = ['-ltbb', '-ltbbmalloc']
-    CL_LIBS = ['-lOpenCL']
     GMP_LIBS = ['-lgmp']
 
 COMPILE_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB
-LINK_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB + TBB_LIBS + CL_LIBS + GMP_LIBS
+LINK_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB + TBB_LIBS + GMP_LIBS
 
 module = Extension(
     name='gosdt',
