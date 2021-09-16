@@ -1,4 +1,5 @@
 #include "main.hpp"
+#include "version.hpp"
 
 int main(int argc, char *argv[]) {
 
@@ -6,7 +7,9 @@ int main(int argc, char *argv[]) {
 	file_descriptors.fd = 0; /* this is STDIN */
 	file_descriptors.events = POLLIN;
 	bool standard_input = poll(& file_descriptors, 1, 0) == 1;
-	
+
+	std::cout << "gosdt-" << BUILD_GIT_REV << " (" << BUILD_DATE << " on " << BUILD_HOST << ")" << std::endl;
+
 	// Check program input
 	if ((standard_input && (argc < 1 || argc > 2)) || (!standard_input && (argc < 2 || argc > 3))) {
 		std::cout << "Usage: gosdt [path to feature set] ?[path to config]" << std::endl;
@@ -20,7 +23,7 @@ int main(int argc, char *argv[]) {
 		std::cout << "File Not Found: " << argv[2] << std::endl;
 		return 1;
 	}
-	
+
 	if ((standard_input && argc == 2) || (!standard_input && argc == 3)) {
 		// Use custom configuration if provided
 		std::ifstream configuration(argv[argc - 1]);
