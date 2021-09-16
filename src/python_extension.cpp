@@ -61,6 +61,13 @@ static PyObject * size(PyObject * self, PyObject * args) { return Py_BuildValue(
 // @returns the current status code
 static PyObject * status(PyObject * self, PyObject * args) { return Py_BuildValue("i", GOSDT::status); }
 
+// @returns the current git revision of the build
+static PyObject * build_version(PyObject *self, PyObject *args) { return Py_BuildValue("s", BUILD_GIT_REV);}
+// @returns the date on which the modules has been built
+static PyObject * build_date(PyObject *self, PyObject *args) { return Py_BuildValue("s", BUILD_DATE);}
+// @returns the host name where the module have been build
+static PyObject * build_host(PyObject *self, PyObject *args) { return Py_BuildValue("s", BUILD_HOST);}
+
 // Define the list of methods for a module
 static PyMethodDef gosdt_methods[] = {
     // { method name, method pointer, method parameter format, method description }
@@ -78,6 +85,10 @@ static PyMethodDef gosdt_methods[] = {
     {"lower_bound", lower_bound, METH_NOARGS, "Check the lower_bound code of the algorithm"},
     {"upper_bound", upper_bound, METH_NOARGS, "Check the upper_bound code of the algorithm"},
     {"model_loss", model_loss, METH_NOARGS, "Check the model_loss code of the algorithm"},
+    {"build_version", build_version, METH_NOARGS, "the build git revision" },
+    {"build_date", build_date, METH_NOARGS, "the build the build date" },
+    {"build_host", build_host, METH_NOARGS, "the build host" },
+
     {NULL, NULL, 0, NULL}
 };
 
