@@ -21,6 +21,12 @@ LD_ADD = -ltbb -ltbbmalloc -lgmp
 CL_LD_FLAGS = @CL_CFLAGS@
 CL_ADD = @CL_LIBS@
 
+if LINUX
+CPP_FLAGS += -DBUILD_GIT_REV="\"`git describe --always --tags --dirty=\"-dirty\"`\""
+CPP_FLAGS += -DBUILD_DATE="\"`date`\""
+CPP_FLAGS += -DBUILD_HOST="\"`hostname`\""
+endif
+
 if OSX
 LD_FLAGS += -stdlib=libc++
 if INCLUDE_OPENCL
@@ -32,7 +38,7 @@ endif
 
 bin_PROGRAMS = gosdt
 gosdt_CPPFLAGS = $(CPP_FLAGS)
-gosdt_LDFLAGS = $(LD_FLAGS) 
+gosdt_LDFLAGS = $(LD_FLAGS)
 gosdt_LDADD = $(LD_ADD)
 
 gosdt_SOURCES = \
