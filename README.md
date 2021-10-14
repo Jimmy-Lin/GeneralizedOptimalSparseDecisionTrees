@@ -27,6 +27,17 @@ Refer to [**Dependency Installation**](/doc/dependencies.md##Installation)
 ./autobuild --install
 ```
 
+### Building wheels for distribution
+Example below builds a wheel that works on x86 architecture, refer to [manylinux](https://github.com/pypa/manylinux) documentation for other architectures.
+```
+DOCKER_IMAGE=quay.io/pypa/manylinux_2_24_x86_64
+PLAT='manylinux_2_24_x86_64'
+docker container run -t --rm \                   
+-e PLAT=$PLAT \
+-v "$(pwd)":/io \
+"$DOCKER_IMAGE" /io/build-wheels.sh
+```
+
 ### Executing the Program
 ```bash
 gosdt dataset.csv config.json
