@@ -39,6 +39,7 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: x86_64
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
+          CIBW_SKIP: "*-musllinux_x86_64"
           CIBW_BEFORE_ALL_LINUX: >
             apt-get update -y &&
             apt-get install -y libboost-all-dev &&
