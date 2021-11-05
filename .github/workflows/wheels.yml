@@ -37,9 +37,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.2.2
         # to supply options, put them in 'env', like:
         env:
-          CIBW_ARCHS_LINUX: aarch64
+          CIBW_ARCHS_LINUX: auto
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
           CIBW_BEFORE_ALL_LINUX: >
             apt-get update -y &&
             apt-get install -y libboost-all-dev &&
@@ -47,14 +46,7 @@ jobs:
             apt-get install -y libgmp10 &&
             apt-get install -y ocl-icd-opencl-dev &&
             apt-get install -y libtbb-dev &&
-            apt-get install -y rsync &&
-            git clone https://github.com/wiredtiger/wiredtiger.git &&
-            cd wiredtiger &&
-            sh autogen.sh &&
-            ./configure &&
-            make &&
-            make install &&
-            cd ..
+            apt-get install -y wiredtiger
 
       - uses: actions/upload-artifact@v2
         with:
