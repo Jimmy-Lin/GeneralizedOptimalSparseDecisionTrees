@@ -37,7 +37,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.2.2
         # to supply options, put them in 'env', like:
         env:
-          CIBW_ARCHS_LINUX: auto
+          CIBW_ARCHS_LINUX: x86_64
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
           CIBW_BEFORE_ALL_LINUX: >
             apt-get update -y &&
