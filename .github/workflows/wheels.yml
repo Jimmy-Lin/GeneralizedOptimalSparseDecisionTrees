@@ -49,6 +49,7 @@ jobs:
             apt-get install -y libtbb-dev &&
             git clone https://github.com/wiredtiger/wiredtiger.git &&
             cd wiredtiger &&
+            sh autogen.sh &&
             ./configure &&
             make &&
             make install &&
