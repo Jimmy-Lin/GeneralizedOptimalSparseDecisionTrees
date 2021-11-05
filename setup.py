@@ -47,6 +47,6 @@ module = Extension(
 
 setup(
     name='gosdt',
-    version='0.1.2',
+    version='0.1.3',
     ext_modules=[module]
 )
