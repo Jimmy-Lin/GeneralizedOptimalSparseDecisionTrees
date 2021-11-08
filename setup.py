@@ -46,20 +46,14 @@ module = Extension(
     extra_objects=[obj for obj in glob.glob('src/*.o')]
 )
 
-# setup(
-#     name='gosdt',
-#     version='0.1.3',
-#     ext_modules=[module]
-# )
-
 setuptools.setup(
     name="gosdt",
     version="0.1.4",
-    author="Jimmy Lin, Keyan Nasseri, Chudi Zhong, and others",
-    author_email="nasseri.keyan@gmail.com",
+    author="Jimmy Lin, Chudi Zhong, and others",
+    author_email="jimmy.lin.projects@gmail.com",
     description="C++ implementation of Generalized Optimal Sparse Decision Trees",
     ext_modules=[module],
-    url="https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees",
+    url="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees",
     python_requires='>=3.6',
     classifiers=[
         "Programming Language :: Python :: 3",
