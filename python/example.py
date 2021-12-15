@@ -1,32 +1,74 @@
 import pandas as pd
 import numpy as np
+import time
+import pathlib
+from sklearn.ensemble import GradientBoostingClassifier
+from model.threshold_guess import compute_thresholds
 from model.gosdt import GOSDT
 
-dataframe = pd.DataFrame(pd.read_csv("experiments/datasets/iris/data.csv"))
+# read the dataset
+df = pd.read_csv("experiments/datasets/fico.csv", sep=";")
+X, y = df.iloc[:,:-1].values, df.iloc[:,-1].values
+h = df.columns[:-1]
 
-X = dataframe[dataframe.columns[:-1]]
-y = dataframe[dataframe.columns[-1:]]
+# GBDT parameters for threshold and lower bound guesses
+n_est = 40
+max_depth = 1
 
-hyperparameters = {
-    "regularization": 0.04,
-    "time_limit": 3600,
-    "verbose": True
-}
+# guess thresholds
+X = pd.DataFrame(X, columns=h)
+print("X:", X.shape)
+print("y:",y.shape)
+X_train, thresholds, header, threshold_guess_time = compute_thresholds(X, y, n_est, max_depth)
+y_train = pd.DataFrame(y)
+X_test = X_train
+y_test = y_train
 
-model = GOSDT(hyperparameters)
-model.fit(X, y)
-# model.load("python/model/model.json")
-# model.load("../gosdt_icml/model.json")
-print("Execution Time: {}".format(model.time))
+# guess lower bound
+start_time = time.perf_counter()
+clf = GradientBoostingClassifier(n_estimators=n_est, max_depth=max_depth, random_state=42)
+clf.fit(X_train, y_train.values.flatten())
+warm_labels = clf.predict(X_train)
 
-prediction = model.predict(X)
-training_accuracy = model.score(X, y)
-print("Training Accuracy: {}".format(training_accuracy))
-print("Size: {}".format(model.leaves()))
-print("Loss: {}".format(1 - training_accuracy))
-print("Risk: {}".format(
-    model.leaves() * hyperparameters["regularization"]
-    + 1 - training_accuracy))
-model.tree.__initialize_training_loss__(X, y)
+elapsed_time = time.perf_counter() - start_time
+
+lb_time = elapsed_time
+
+# save the labels as a tmp file and return the path to it.
+labelsdir = pathlib.Path('/tmp/warm_lb_labels')
+labelsdir.mkdir(exist_ok=True, parents=True)
+
+labelpath = labelsdir / 'warm_label.tmp'
+labelpath = str(labelpath)
+pd.DataFrame(warm_labels).to_csv(labelpath, header="class_labels",index=None) # TODO: verify this formats correctly for gosdt (shouldn't require headers)
+
+
+# train GOSDT model
+config = {
+            "regularization": 0.001,
+            "similar_support": False,
+            "strong_indifference": False,
+            "time_limit": 1800,
+            "depth_budget": 5,
+            "warm_LB": True,
+            "path_to_labels": labelpath
+        }
+
+model = GOSDT(config)
+
+model.fit(X_train, y_train)
+
+print("evaluate the model, extracting tree and scores", flush=True)
+
+# get the results
+train_acc = model.score(X_train, y_train)
+test_acc = model.score(X_test, y_test)
+n_leaves = model.leaves()
+n_nodes = model.nodes()
+time = model.utime
+
+print("Model training time: {}".format(time))
+print("Training accuracy: {}".format(train_acc))
+print("# of leaves: {}".format(n_leaves))
 print(model.tree)
-print(model.latex())
+

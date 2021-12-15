@@ -1,0 +1,77 @@
+Unable to init server: Could not connect: Connection refused
+Unable to init server: Could not connect: Connection refused
+
+(example.py:29034): Gdk-CRITICAL **: 15:11:43.763: gdk_cursor_new_for_display: assertion 'GDK_IS_DISPLAY (display)' failed
+X: (100, 2)
+y: (100,)
+gosdt reported successful execution
+training completed. 1.039/0.016/1.055 (user, system, wall), mem=194 MB
+bounds: [0.160000..0.160000] (0.000000) loss=0.030000, iterations=31075
+evaluate the model, extracting tree and scores
+Model training time: 1.0390650033950806 0.01601099967956543
+Training accuracy: 0.97
+# of leaves: 13
+if feat1<=-0.2574999928474426 = 1 and feat1<=-0.36899998784065247 = 1 then:
+    predicted class: 1.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 = 1 and feat1<=-0.36899998784065247 != 1 then:
+    predicted class: 0.0
+    misclassification penalty: 0.01
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 = 1 and feat2<=-0.21299999952316284 = 1 and feat2<=-0.30000001192092896 = 1 then:
+    predicted class: 1.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 = 1 and feat2<=-0.21299999952316284 = 1 and feat2<=-0.30000001192092896 != 1 then:
+    predicted class: 0.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.06799999997019768 = 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 = 1 and feat2<=-0.21299999952316284 != 1 then:
+    predicted class: 1.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.06799999997019768 != 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 = 1 and feat2<=-0.21299999952316284 != 1 then:
+    predicted class: 0.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.08249999955296516 = 1 and feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 != 1 and feat2<=0.12449999898672104 = 1 then:
+    predicted class: 1.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.08249999955296516 != 1 and feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 != 1 and feat2<=0.12449999898672104 = 1 then:
+    predicted class: 0.0
+    misclassification penalty: 0.02
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 != 1 and feat2<=0.12449999898672104 != 1 and feat2<=0.2995000034570694 = 1 then:
+    predicted class: 1.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 = 1 and feat2<=-0.007499999832361937 != 1 and feat2<=0.12449999898672104 != 1 and feat2<=0.2995000034570694 != 1 then:
+    predicted class: 0.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 != 1 and feat1<=0.37049999833106995 = 1 and feat2<=0.2995000034570694 = 1 then:
+    predicted class: 1.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 != 1 and feat1<=0.37049999833106995 = 1 and feat2<=0.2995000034570694 != 1 then:
+    predicted class: 0.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01
+
+else if feat1<=-0.2574999928474426 != 1 and feat1<=0.20799999684095383 != 1 and feat1<=0.37049999833106995 != 1 then:
+    predicted class: 0.0
+    misclassification penalty: 0.0
+    complexity penalty: 0.01

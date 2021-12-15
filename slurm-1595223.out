@@ -1,0 +1,52 @@
+Unable to init server: Could not connect: Connection refused
+Unable to init server: Could not connect: Connection refused
+
+(example.py:29182): Gdk-CRITICAL **: 15:14:01.899: gdk_cursor_new_for_display: assertion 'GDK_IS_DISPLAY (display)' failed
+X: (10459, 23)
+y: (10459,)
+gosdt reported successful execution
+training completed. 1.658/0.098/1.756 (user, system, wall), mem=364 MB
+bounds: [0.290914..0.290914] (0.000000) loss=0.282914, iterations=13569
+evaluate the model, extracting tree and scores
+Model training time: 1.6584229469299316
+Training accuracy: 0.7170857634573095
+# of leaves: 8
+if ExternalRiskEstimate<=67.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 = 1 then:
+    predicted class: 1
+    misclassification penalty: 0.027
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=67.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 = 1 then:
+    predicted class: 0
+    misclassification penalty: 0.006
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=74.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 = 1 then:
+    predicted class: 1
+    misclassification penalty: 0.071
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=74.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 = 1 then:
+    predicted class: 0
+    misclassification penalty: 0.061
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=78.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 != 1 then:
+    predicted class: 1
+    misclassification penalty: 0.033
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=78.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 != 1 then:
+    predicted class: 0
+    misclassification penalty: 0.005
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=67.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 != 1 then:
+    predicted class: 1
+    misclassification penalty: 0.026
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=67.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 != 1 then:
+    predicted class: 0
+    misclassification penalty: 0.054
+    complexity penalty: 0.001
