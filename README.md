@@ -139,8 +139,8 @@ The configuration is a JSON object and has the following structure and default v
  - Description: Enables printing of configuration, progress, and results to standard output
 
 **reference_LB**
--values: true or false
--Description: Enables using a vector of misclassifications from another (reference) model to lower bound our own misclassifications
+ - Values: true or false
+ - Description: Enables using a vector of misclassifications from another (reference) model to lower bound our own misclassifications
 
 
 ### Tuners
