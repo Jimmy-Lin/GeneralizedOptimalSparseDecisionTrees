@@ -249,7 +249,7 @@ The configuration is a JSON object and has the following structure and default v
 ---
 # Example
 
-Example code to run GOSDT with threshold guessing, lower bound guessing, and depth limit. 
+Example code to run GOSDT with threshold guessing, lower bound guessing, and depth limit. The example python file is avaialable in python/example.py
 
 ```
 import pandas as pd
