@@ -1,203 +1,108 @@
-# GOSDT Documentation
-Implementation of [Generalized Optimal Sparse Decision Tree](https://arxiv.org/pdf/2006.08690.pdf).
+# Fast Sparse Decision Tree Optimization via Reference Ensembles
 
 # Table of Content
-- [Usage](#usage)
-- [Development](#development)
+- [Installation](#installation)
 - [Configuration](#configuration)
-- [Dependencies](#dependencies)
+- [Example](#example)
+- [Repository Structure](#repository_structure)
 - [License](#license)
 - [FAQs](#faqs)
 
 ---
 
-# Usage
+# Installation
 
-Guide for end-users who want to use the library without modification.
+<!--Guide for end-users who want to use the library without modification.
 
 Describes how to install and use the library as a stand-alone command-line program or as an embedded extension in a larger project.
 Currently supported as a Python extension.
+-->
+### Installing GOSDT Dependencies
 
-## Installing Dependencies
-Refer to [**Dependency Installation**](/doc/dependencies.md##Installation)
+List of external dependencies
 
-## As a Stand-Alone Command Line Program
-### Installation
+The following dependencies need to be installed to build the program. 
+ - [**Boost**](https://www.boost.org/) - Collection of portable C++ source libraries
+ - [**GMP**](http://gmplib.org/) - Collection of functions for high-precision artihmetics
+ - [**Intel TBB**](https://www.threadingbuildingblocks.org/) - Rich and complete approach to parallelism in C++
+ - [**WiredTiger**](https://source.wiredtiger.com/2.5.2/index.html) - WiredTiger is an high performance, scalable, production quality, NoSQL, Open Source extensible platform for data management
+ - [**OpenCL**](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=14&cad=rja&uact=8&ved=2ahUKEwizj4n2k8LlAhVcCTQIHZlADscQFjANegQIAhAB&url=https%3A%2F%2Fwww.khronos.org%2Fregistry%2FOpenCL%2F&usg=AOvVaw3JjOwbrewRqPxpTXRZ6vN9)(Optional) - A framework for execution across heterogeneous hardware accelerators.
+
+**Bundled Dependencies**
+
+The following dependencies are included as part of the repository, thus requiring no additional installation.
+ - [**nlohmann/json**](https://github.com/nlohmann/json) - JSON Parser
+ - [**ben-strasser/fast-cpp-csv-parser**](https://github.com/ben-strasser/fast-cpp-csv-parser) - CSV Parser
+ - [**OpenCL C++ Bindings 1.2**](https://www.khronos.org/registry/OpenCL/specs/opencl-cplusplus-1.2.pdf) - OpenCL bindings for GPU computing
+
+ **Installation**
+ 
+ Install these using your system package manager.
+ There are also installation scripts provided for your convenience: **trainer/auto**
+ 
+ These currently support interface with **brew** and **apt**
+  - **Boost** - `auto/boost.sh --install`
+  - **GMP** - `auto/gmp.sh --install`
+  - **Intel TBB** - `auto/tbb.sh --install`
+  - **WiredTiger** - `auto/wiredtiger.sh --install`
+  - **OpenCL** - `auto/opencl.sh --install`
+
+
+### Installing GOSDT as a Stand-Alone Command Line Program
 ```
 ./autobuild --install
 ```
 
-### Executing the Program
-```bash
-gosdt dataset.csv config.json
-# or 
-cat dataset.csv | gosdt config.json >> output.json
-```
-
-For examples of dataset files, refer to `experiments/datasets/compas/binned.csv`.
-For an example configuration file, refer to `experiments/configurations/compas.json`.
-For documentation on the configuration file, refer to [**Dependency Installation**](/doc/configuration.md)
-
-## As a Python Library with C++ Extensions
-### Build and Installation
+### Installing GOSDT as a Python Library with C++ Extensions
 ```
 ./autobuild --install-python
 ```
-_If you have multiple Python installations, please make sure to build and install using the same Python installation as the one intended for interacting with this library._
+For more details about GOSDT installation and examples of running **pure** GOSDT, please see https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees/blob/master/README.md for more details.
 
-
-### Importing the C++ Extension
-```python
-import gosdt
-
-with open ("data.csv", "r") as data_file:
-    data = data_file.read()
-
-with open ("config.json", "r") as config_file:
-    config = config_file.read()
-
-
-print("Config:", config)
-print("Data:", data)
-
-gosdt.configure(config)
-result = gosdt.fit(data)
-
-print("Result: ", result)
-print("Time (seconds): ", gosdt.time())
-print("Iterations: ", gosdt.iterations())
-print("Graph Size: ", gosdt.size())
-```
-
-### Importing Extension with local Python Wrapper
-```python
-import pandas as pd
-import numpy as np
-from model.gosdt import GOSDT
-
-dataframe = pd.DataFrame(pd.read_csv("experiments/datasets/monk_2/data.csv"))
-
-X = dataframe[dataframe.columns[:-1]]
-y = dataframe[dataframe.columns[-1:]]
-
-hyperparameters = {
-    "regularization": 0.1,
-    "time_limit": 3600,
-    "verbose": True,
-}
-
-model = GOSDT(hyperparameters)
-model.fit(X, y)
-print("Execution Time: {}".format(model.time))
-
-prediction = model.predict(X)
-training_accuracy = model.score(X, y)
-print("Training Accuracy: {}".format(training_accuracy))
-print(model.tree)
-```
-
----
-
-# Development
-
-
-Guide for developers who want to use, modify and test the library.
-
-Describes how to install and use the library with details on project structure.
-
-## Repository Structure
- - **notebooks** - interactive notebooks for examples and visualizations
- - **experiments** - configurations, datasets, and models to run experiments
- - **doc** - documentation
- - **python** - code relating to the Python implementation and wrappers around C++ implementation
- - **auto** - automations for checking and installing project dependencies
- - **dist** - compiled binaries for distribution
- - **build** - compiled binary objects and other build artifacts
- - **lib** - headers for external libraries
- - **log** - log files
- - **src** - source files
- - **test** - test files
-
-## Installing Dependencies
-Refer to [**Dependency Installation**](/doc/dependencies.md##Installation)
-
-## Build Process
- - **Check Updates to the Dependency Tests or Makefile** 
-   ```
-   ./autobuild --regenerate
-   ```
- - **Check for Missing Dependencies** 
-   ```
-   ./autobuild --configure --enable-tests
-   ```
- - **Build and Run Test Suite**
-   ```
-   ./autobuild --test
-   ```
- - **Build and Install Program**
-   ```
-   ./autobuild --install --enable-tests
-   ```
- - **Run the Program** 
-   ```
-   gosdt dataset.csv config.json
-   ```
- - **Build and Install the Python Extension**
-   ```
-   ./autobuild --install-python
-   ```
- For a full list of build options, run `./autobuild --help`
 
 ---
 
 # Configuration
 
-Details on the configuration options.
-
-```bash
-gosdt dataset.csv config.json
-# or
-cat dataset.csv | gosdt config.json
-```
-
-Here the file `config.json` is optional.
-There is a default configuration which will be used if no such file is specified.
-
-## Configuration Description
-
-The configuration file is a JSON object and has the following structure and default values:
+The configuration is a JSON object and has the following structure and default values:
 ```json
-{
-  "balance": false,
-  "cancellation": true,
-  "look_ahead": true,
-  "similar_support": true,
-  "feature_exchange": true,
-  "continuous_feature_exchange": true,
-  "rule_list": false,
-
-  "diagnostics": false,
-  "verbose": false,
-
-  "regularization": 0.05,
+{ 
   "uncertainty_tolerance": 0.0,
+  "regularization": 0.05,
   "upperbound": 0.0,
 
-  "model_limit": 1,
-  "precision_limit": 0,
-  "stack_limit": 0,
-  "tile_limit": 0,
   "time_limit": 0,
   "worker_limit": 1,
+  "stack_limit": 0,
+  "precision_limit": 0,
+  "model_limit": 1,
+
+  "verbose": false,
+  "diagnostics": false,
+
+  "depth_budget": 0,
+  "reference_LB": false, 
+  "path_to_labels": "",
+
+  "balance": false,
+  "look_ahead": true,
+  "similar_support": true,
+  "cancellation": true,
+  "continuous_feature_exchange": false,
+  "feature_exchange": false,
+  "feature_transform": true,
+  "rule_list": false,
+  "non_binary": false,
 
   "costs": "",
   "model": "",
-  "profile": "",
   "timing": "",
   "trace": "",
-  "tree": ""
+  "tree": "",
+  "profile": ""
 }
 ```
+
 
 ### Flags
 
@@ -233,16 +138,24 @@ The configuration file is a JSON object and has the following structure and defa
  - Values: true or false
  - Description: Enables printing of configuration, progress, and results to standard output
 
- ### Tuners
+**reference_LB**
+-values: true or false
+-Description: Enables using a vector of misclassifications from another (reference) model to lower bound our own misclassifications
 
- **regularization**
+
+### Tuners
+
+**regularization**
  - Values: Decimal within range [0,1]
  - Description: Used to penalize complexity. A complexity penalty is added to the risk in the following way.
    ```
    ComplexityPenalty = # Leaves x regularization
    ```
+**depth_budget**
+- Values: Integers >= 1
+- Description: Used to set the maximum tree depth for solutions, counting a tree with just the root node as depth 1. 0 means unlimited.
 
- **uncertainty_tolerance**
+**uncertainty_tolerance**
  - Values: Decimal within range [0,1]
  - Description: Used to allow early termination of the algorithm. Any models produced as a result are guaranteed to score within the lowerbound and upperbound at the time of termination. However, the algorithm does not guarantee that the optimal model is within the produced model unless the uncertainty value has reached 0.
 
@@ -251,6 +164,10 @@ The configuration file is a JSON object and has the following structure and defa
 
 ### Limits
 
+**path_to_labels**
+- Values: String
+- Description: If reference_LB is true, gives file path to the labels from the reference model. Otherwise, not used; if reference lb is true, configure instantiates the Reference class with the appropriate labels.
+ 
 **model_limit**
  - Values: Decimal greater than or equal to 0
  - Description: The maximum number of models that will be extracted into the output.
@@ -329,82 +246,157 @@ The configuration file is a JSON object and has the following structure and defa
  - Description: snapshots used for trace-tree visualization will be stored in this directory
  - Special Case: When set to empty string, no snapshots are stored.
 
-## Optimizing Different Loss Functions
+---
+# Example
 
-When using the Python interface `python/model/gosdt.py` additional loss functions are available.
-Here is the list of loss functions implemented along with descriptions of their hyperparameters.
+Example code to run GOSDT with threshold guessing, lower bound guessing, and depth limit. 
 
-### Accuracy
 ```
-{ "objective": "acc" }
-```
-This optimizes the loss defined as the uniformly weighted number of misclassifications.
+import pandas as pd
+import numpy as np
+import time
+import pathlib
+from sklearn.ensemble import GradientBoostingClassifier
+from model.threshold_guess import compute_thresholds
+from model.gosdt import GOSDT
 
-### Balanced Accuracy
-```
-{ "objective": "bacc" }
-```
-This optimizes the loss defined as the number of misclassifications, adjusted for imbalanced representation of positive or negative samples.
+# read the dataset
+df = pd.read_csv("experiments/datasets/fico.csv", sep=";")
+X, y = df.iloc[:,:-1].values, df.iloc[:,-1].values
+h = df.columns[:-1]
 
-### Weighted Accuracy
-```
-{ "objective": "wacc", "w": 0.5 }
-```
-This optimizes the loss defined as the number of misclassifications, adjusted so that negative samples have a weight of `w` while positive samples have a weight of `1.0`
+# GBDT parameters for threshold and lower bound guesses
+n_est = 40
+max_depth = 1
 
-### F - 1 Score
-```
-{ "objective": "f1", "w": 0.9 }
-```
-This optimizes the loss defined as the [F-1](https://en.wikipedia.org/wiki/F1_score) score of the model's predictions.
+# guess thresholds
+X = pd.DataFrame(X, columns=h)
+print("X:", X.shape)
+print("y:",y.shape)
+X_train, thresholds, header, threshold_guess_time = compute_thresholds(X, y, n_est, max_depth)
+y_train = pd.DataFrame(y)
 
-### Area under the Receiver Operanting Characteristics Curve
-```
-{ "objective": "auc" }
-```
-This maximizes the area under the [ROC](https://en.wikipedia.org/wiki/Receiver_operating_characteristic) curve formed by varying the prediction of the leaves.
+# guess lower bound
+start_time = time.perf_counter()
+clf = GradientBoostingClassifier(n_estimators=n_est, max_depth=max_depth, random_state=42)
+clf.fit(X_train, y_train.values.flatten())
+warm_labels = clf.predict(X_train)
+elapsed_time = time.perf_counter() - start_time
+lb_time = elapsed_time
 
-### Partial Area under the Receiver Operanting Characteristics Curve
+# save the labels from lower bound guesses as a tmp file and return the path to it.
+labelsdir = pathlib.Path('/tmp/warm_lb_labels')
+labelsdir.mkdir(exist_ok=True, parents=True)
+labelpath = labelsdir / 'warm_label.tmp'
+labelpath = str(labelpath)
+pd.DataFrame(warm_labels).to_csv(labelpath, header="class_labels",index=None) # TODO: verify this formats correctly for gosdt (shouldn't require headers)
+
+
+# train GOSDT model
+config = {
+            "regularization": 0.001,
+            "similar_support": False,
+            "strong_indifference": False,
+            "time_limit": 1800,
+            "depth_budget": 5,
+            "warm_LB": True,
+            "path_to_labels": labelpath
+        }
+
+model = GOSDT(config)
+
+model.fit(X_train, y_train)
+
+print("evaluate the model, extracting tree and scores", flush=True)
+
+# get the results
+train_acc = model.score(X_train, y_train)
+n_leaves = model.leaves()
+n_nodes = model.nodes()
+time = model.utime
+
+print("Model training time: {}".format(time))
+print("Training accuracy: {}".format(train_acc))
+print("# of leaves: {}".format(n_leaves))
+print(model.tree)
 ```
-{ "objective": "pauc", "theta": 0.1 }
+
+**Output**
+
 ```
-This maximizes the partial area under the [ROC](https://en.wikipedia.org/wiki/Receiver_operating_characteristic) curve formed by varying the prediction of the leaves. The area is constrained so that false-positive-rate is in the closed interval `[0,theta]`
+X: (10459, 23)
+y: (10459,)
+gosdt reported successful execution
+training completed. 1.658/0.098/1.756 (user, system, wall), mem=364 MB
+bounds: [0.290914..0.290914] (0.000000) loss=0.282914, iterations=13569
+evaluate the model, extracting tree and scores
+Model training time: 1.6584229469299316
+Training accuracy: 0.7170857634573095
+# of leaves: 8
+if ExternalRiskEstimate<=67.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 = 1 then:
+    predicted class: 1
+    misclassification penalty: 0.027
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=67.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 = 1 then:
+    predicted class: 0
+    misclassification penalty: 0.006
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=74.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 = 1 then:
+    predicted class: 1
+    misclassification penalty: 0.071
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=74.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 = 1 then:
+    predicted class: 0
+    misclassification penalty: 0.061
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=78.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 != 1 then:
+    predicted class: 1
+    misclassification penalty: 0.033
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=78.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 = 1 and PercentTradesWBalance<=80.5 != 1 then:
+    predicted class: 0
+    misclassification penalty: 0.005
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=67.5 = 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 != 1 then:
+    predicted class: 1
+    misclassification penalty: 0.026
+    complexity penalty: 0.001
+
+else if ExternalRiskEstimate<=67.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 != 1 and MSinceMostRecentInqexcl7days<=0.5 != 1 then:
+    predicted class: 0
+    misclassification penalty: 0.054
+    complexity penalty: 0.001
+```
 
 ---
 
-# Dependencies
+# Repository_Structure
+Guide for developers who want to use, modify and test the library.
 
-List of external dependencies
+Describes how to install and use the library with details on project structure.
 
-The following dependencies need to be installed to build the program. 
- - [**Boost**](https://www.boost.org/) - Collection of portable C++ source libraries
- - [**GMP**](http://gmplib.org/) - Collection of functions for high-precision artihmetics
- - [**Intel TBB**](https://www.threadingbuildingblocks.org/) - Rich and complete approach to parallelism in C++
- - [**WiredTiger**](https://source.wiredtiger.com/2.5.2/index.html) - WiredTiger is an high performance, scalable, production quality, NoSQL, Open Source extensible platform for data management
- - [**OpenCL**](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=14&cad=rja&uact=8&ved=2ahUKEwizj4n2k8LlAhVcCTQIHZlADscQFjANegQIAhAB&url=https%3A%2F%2Fwww.khronos.org%2Fregistry%2FOpenCL%2F&usg=AOvVaw3JjOwbrewRqPxpTXRZ6vN9)(Optional) - A framework for execution across heterogeneous hardware accelerators.
-
-### Bundled Dependencies
-The following dependencies are included as part of the repository, thus requiring no additional installation.
- - [**nlohmann/json**](https://github.com/nlohmann/json) - JSON Parser
- - [**ben-strasser/fast-cpp-csv-parser**](https://github.com/ben-strasser/fast-cpp-csv-parser) - CSV Parser
- - [**OpenCL C++ Bindings 1.2**](https://www.khronos.org/registry/OpenCL/specs/opencl-cplusplus-1.2.pdf) - OpenCL bindings for GPU computing
-
- ### Installation
- Install these using your system package manager.
- There are also installation scripts provided for your convenience: **trainer/auto**
- 
- These currently support interface with **brew** and **apt**
-  - **Boost** - `auto/boost.sh --install`
-  - **GMP** - `auto/gmp.sh --install`
-  - **Intel TBB** - `auto/tbb.sh --install`
-  - **WiredTiger** - `auto/wiredtiger.sh --install`
-  - **OpenCL** - `auto/opencl.sh --install`
+ - **experiments** - configurations, datasets, and models to run experiments
+ - **doc** - documentation
+ - **python** - code relating to the Python implementation and wrappers around C++ implementation
+ - **auto** - automations for checking and installing project dependencies
+ - **dist** - compiled binaries for distribution
+ - **build** - compiled binary objects and other build artifacts
+ - **lib** - headers for external libraries
+ - **log** - log files
+ - **src** - source files
+ - **test** - test files
 
 ---
 
 # FAQs
 
-If you run into any issues, consult the [**FAQs**](/doc/faqs.md) first. 
+If you run into any issues when running GOSDT, consult the [**FAQs**](https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees/blob/master/doc/faqs.md) first. 
 
 ---
 
@@ -414,6 +406,3 @@ Licensing information
 
 ---
 
-**Inquiries**
-
-For general inquiries, send an email to `jimmy.projects.lin@gmail.com`
