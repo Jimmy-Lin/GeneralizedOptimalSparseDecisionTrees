@@ -402,7 +402,7 @@ If you run into any issues when running GOSDT, consult the [**FAQs**](https://gi
 
 # License
 
-Licensing information
+This software is licensed under a 3-clause BSD license (see the LICENSE file for details). 
 
 ---
 
