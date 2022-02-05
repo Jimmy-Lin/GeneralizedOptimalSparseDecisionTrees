@@ -48,7 +48,7 @@ module = Extension(
 
 setuptools.setup(
     name="gosdt-deprecated",
-    version="0.1",
+    version="0.2",
     author="Jimmy Lin, Chudi Zhong, and others",
     author_email="jimmy.projects.lin@gmail.com",
     description="C++ implementation of Generalized Optimal Sparse Decision Trees",
