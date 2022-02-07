@@ -42,7 +42,7 @@ For documentation on the configuration file, refer to [**Dependency Installation
 ### Installation
 #### x86 Linux or macOS
 ```
-pip install gosdt
+pip install gosdt-deprecated
 ```
 #### Other platforms
 ```
