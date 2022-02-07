@@ -37,7 +37,7 @@ COMPILE_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB
 LINK_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB + TBB_LIBS + CL_LIBS + GMP_LIBS
 
 module = Extension(
-    name="gosdt_deprecated",
+    name="gosdtdeprecated",
     # sources=['src/python_extension.cpp'],
     sources=[obj for obj in glob.glob('src/*.cpp')],
     language='c++',
@@ -47,8 +47,8 @@ module = Extension(
 )
 
 setuptools.setup(
-    name="gosdt-deprecated",
-    version="0.2",
+    name="gosdtdeprecated",
+    version="0.1",
     author="Jimmy Lin, Chudi Zhong, and others",
     author_email="jimmy.projects.lin@gmail.com",
     description="C++ implementation of Generalized Optimal Sparse Decision Trees",
