@@ -37,7 +37,7 @@ COMPILE_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB
 LINK_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB + TBB_LIBS + CL_LIBS + GMP_LIBS
 
 module = Extension(
-    name="gosdtdeprecated",
+    name="gosdt",
     # sources=['src/python_extension.cpp'],
     sources=[obj for obj in glob.glob('src/*.cpp')],
     language='c++',
@@ -47,7 +47,7 @@ module = Extension(
 )
 
 setuptools.setup(
-    name="gosdtdeprecated",
+    name="gosdt-deprecated",
     version="0.1",
     author="Jimmy Lin, Chudi Zhong, and others",
     author_email="jimmy.projects.lin@gmail.com",
