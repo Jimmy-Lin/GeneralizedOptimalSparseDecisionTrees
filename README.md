@@ -67,23 +67,20 @@ For more details about GOSDT installation and examples of running **pure** GOSDT
 The configuration is a JSON object and has the following structure and default values:
 ```json
 { 
-  "uncertainty_tolerance": 0.0,
   "regularization": 0.05,
-  "upperbound": 0.0,
-
+  "depth_budget": 0,
+  "reference_LB": false, 
+  "path_to_labels": "",
   "time_limit": 0,
+  
+  "uncertainty_tolerance": 0.0,
+  "upperbound": 0.0
   "worker_limit": 1,
   "stack_limit": 0,
   "precision_limit": 0,
   "model_limit": 1,
-
   "verbose": false,
   "diagnostics": false,
-
-  "depth_budget": 0,
-  "reference_LB": false, 
-  "path_to_labels": "",
-
   "balance": false,
   "look_ahead": true,
   "similar_support": true,
@@ -93,7 +90,6 @@ The configuration is a JSON object and has the following structure and default v
   "feature_transform": true,
   "rule_list": false,
   "non_binary": false,
-
   "costs": "",
   "model": "",
   "timing": "",
@@ -103,47 +99,7 @@ The configuration is a JSON object and has the following structure and default v
 }
 ```
 
-
-### Flags
-
-**balance**
- - Values: true or false
- - Description: Enables overriding the sample importance by equalizing the importance of each present class
-
-**cancellation**
- - Values: true or false
- - Description: Enables propagate up the dependency graph of task cancellations
-
-**look_ahead**
- - Values: true or false
- - Description: Enables the one-step look-ahead bound implemented via scopes
-
-**similar_support**
- - Values: true or false
- - Description: Enables the similar support bound imeplemented via the distance index
-
-**feature_exchange**
- - Values: true or false
- - Description: Enables pruning of pairs of features using subset comparison
-
-**continuous_feature_exchange**
- - Values: true or false
- - Description: Enables pruning of pairs continuous of feature thresholds using subset comparison
-
-**diagnostics**
- - Values: true or false
- - Description: Enables printing of diagnostic trace when an error is encountered to standard output
-
-**verbose**
- - Values: true or false
- - Description: Enables printing of configuration, progress, and results to standard output
-
-**reference_LB**
- - Values: true or false
- - Description: Enables using a vector of misclassifications from another (reference) model to lower bound our own misclassifications
-
-
-### Tuners
+## Key parameters
 
 **regularization**
  - Values: Decimal within range [0,1]
@@ -151,52 +107,139 @@ The configuration is a JSON object and has the following structure and default v
    ```
    ComplexityPenalty = # Leaves x regularization
    ```
+ - Default: 0.05
+
 **depth_budget**
 - Values: Integers >= 1
 - Description: Used to set the maximum tree depth for solutions, counting a tree with just the root node as depth 1. 0 means unlimited.
+- Default: 0
 
-**uncertainty_tolerance**
- - Values: Decimal within range [0,1]
- - Description: Used to allow early termination of the algorithm. Any models produced as a result are guaranteed to score within the lowerbound and upperbound at the time of termination. However, the algorithm does not guarantee that the optimal model is within the produced model unless the uncertainty value has reached 0.
-
- - Values: Decimal within range [0,1]
- - Description: Used to limit the risk of model search space. This can be used to ensure that no models are produced if even the optimal model exceeds a desired maximum risk. This also accelerates learning if the upperbound is taken from the risk of a nearly optimal model.
-
-### Limits
+**reference_LB**
+ - Values: true or false
+ - Description: Enables using a vector of misclassifications from another (reference) model to lower bound our own misclassifications
+ - Default: false
 
 **path_to_labels**
-- Values: String
-- Description: If reference_LB is true, gives file path to the labels from the reference model. Otherwise, not used; if reference lb is true, configure instantiates the Reference class with the appropriate labels.
- 
-**model_limit**
- - Values: Decimal greater than or equal to 0
- - Description: The maximum number of models that will be extracted into the output.
- - Special Cases: When set to 0, no output is produced.
-
-**precision_limit**
- - Values: Decimal greater than or equal to 0
- - Description: The maximum number of significant figures considered when converting ordinal features into binary features.
- - Special Cases: When set to 0, no limit is imposed.
-
-**stack_limit**
- - Values: Decimal greater than or equal to 0
- - Description: The maximum number of bytes considered for use when allocating local buffers for worker threads.
- - Special Cases: When set to 0, all local buffers will be allocated from the heap.
-
-**tile_limit**
- - Values: Decimal greater than or equal to 0
- - Description: The maximum number of bits used for the finding tile-equivalence
- - Special Cases: When set to 0, no tiling is performed.
+- Values: String representing a path to a file. 
+- Description: This file must be a single-column csv representing a class prediction for each training observation (in the same order as for the training data, using the same class labels as for the training data, and predicting each class present in the training set at least once across all training points). Typically this csv is obtained by fitting a [gradient boosted decision tree](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html) model on the training data, and saving its training set predictions as a csv file. 
+- Example for a dataset with classes 1 and 0: 
+     ```
+     predicted_class
+     0
+     1
+     1
+     1
+     0
+     ```
+- Default: Emptry string
 
 **time_limit**
  - Values: Decimal greater than or equal to 0
  - Description: A time limit upon which the algorithm will terminate. If the time limit is reached, the algorithm will terminate with an error.
  - Special Cases: When set to 0, no time limit is imposed.
+ - Default: 0
+
+
+## More parameters
+### Flag
+
+**balance**
+ - Values: true or false
+ - Description: Enables overriding the sample importance by equalizing the importance of each present class
+ - Default: false
+
+**cancellation**
+ - Values: true or false
+ - Description: Enables propagate up the dependency graph of task cancellations
+ - Default: true
+
+**look_ahead**
+ - Values: true or false
+ - Description: Enables the one-step look-ahead bound implemented via scopes
+ - Default: true
+
+**similar_support**
+ - Values: true or false
+ - Description: Enables the similar support bound imeplemented via the distance index
+ - Default: true
+
+**feature_exchange**
+ - Values: true or false
+ - Description: Enables pruning of pairs of features using subset comparison
+ - Default: false
+
+**continuous_feature_exchange**
+ - Values: true or false
+ - Description: Enables pruning of pairs continuous of feature thresholds using subset comparison
+ - Default: false
+
+**feature_transform**
+ - Values: true or false
+ - Description: Enables the equivalence discovery through simple feature transformations
+ - Default: true
+
+**rule_list**
+ - Values: true or false
+ - Description: Enables rule-list constraints on models
+ - Default: false
+ 
+**non_binary**
+ - Values: true or false
+ - Description: Enables non-binary encoding
+ - Default: false
+
+**diagnostics**
+ - Values: true or false
+ - Description: Enables printing of diagnostic trace when an error is encountered to standard output
+ - Default: false
+
+**verbose**
+ - Values: true or false
+ - Description: Enables printing of configuration, progress, and results to standard output
+ - Default: false
+
+
+
+
+### Tuners
+
+**uncertainty_tolerance**
+ - Values: Decimal within range [0,1]
+ - Description: Used to allow early termination of the algorithm. Any models produced as a result are guaranteed to score within the lowerbound and upperbound at the time of termination. However, the algorithm does not guarantee that the optimal model is within the produced model unless the uncertainty value has reached 0.
+ - Default: 0.0
+
+**upperbound**
+ - Values: Decimal within range [0,1]
+ - Description: Used to limit the risk of model search space. This can be used to ensure that no models are produced if even the optimal model exceeds a desired maximum risk. This also accelerates learning if the upperbound is taken from the risk of a nearly optimal model.
+ - Special Cases: When set to 0, the bound is not activated. 
+ - Default: 0.0
+
+### Limits
+ 
+**model_limit**
+ - Values: Decimal greater than or equal to 0
+ - Description: The maximum number of models that will be extracted into the output.
+ - Special Cases: When set to 0, no output is produced.
+ - Default: 1
+
+**precision_limit**
+ - Values: Decimal greater than or equal to 0
+ - Description: The maximum number of significant figures considered when converting ordinal features into binary features.
+ - Special Cases: When set to 0, no limit is imposed.
+ - Default: 0
+
+**stack_limit**
+ - Values: Decimal greater than or equal to 0
+ - Description: The maximum number of bytes considered for use when allocating local buffers for worker threads.
+ - Special Cases: When set to 0, all local buffers will be allocated from the heap.
+ - Default: 0
+
 
 **worker_limit**
  - Values: Decimal greater than or equal to 1
  - Description: The maximum number of threads allocated to executing th algorithm.
  - Special Cases: When set to 0, a single thread is created for each core detected on the machine.
+ - Default: 1
 
 ### Files
 
@@ -220,31 +263,37 @@ The configuration is a JSON object and has the following structure and default v
      ```
    - Note: costs values are not normalized, so high cost values lower the relative weight of regularization
  - Special Case: When set to empty string, a default cost matrix is used which represents unweighted training misclassification.
+ - Default: Emptry string
 
 **model**
  - Values: string representing a path to a file.
  - Description: The output models will be written to this file.
  - Special Case: When set to empty string, no model will be stored.
+ - Default: Emptry string
 
 **profile**
  - Values: string representing a path to a file.
  - Description: Various analytics will be logged to this file.
  - Special Case: When set to empty string, no analytics will be stored.
+ - Default: Emptry string
 
 **timing**
  - Values: string representing a path to a file.
  - Description: The training time will be appended to this file.
  - Special Case: When set to empty string, no training time will be stored.
+ - Default: Emptry string
 
 **trace**
  - Values: string representing a path to a directory.
  - Description: snapshots used for trace visualization will be stored in this directory
  - Special Case: When set to empty string, no snapshots are stored.
+ - Default: Emptry string
 
 **tree**
  - Values: string representing a path to a directory.
  - Description: snapshots used for trace-tree visualization will be stored in this directory
  - Special Case: When set to empty string, no snapshots are stored.
+ - Default: Emptry string
 
 ---
 # Example
@@ -295,12 +344,11 @@ pd.DataFrame(warm_labels).to_csv(labelpath, header="class_labels",index=None) # 
 # train GOSDT model
 config = {
             "regularization": 0.001,
-            "similar_support": False,
-            "strong_indifference": False,
-            "time_limit": 1800,
             "depth_budget": 5,
             "warm_LB": True,
-            "path_to_labels": labelpath
+            "path_to_labels": labelpath,
+            "time_limit": 1800,
+            "similar_support": False
         }
 
 model = GOSDT(config)

@@ -40,7 +40,7 @@ labelsdir.mkdir(exist_ok=True, parents=True)
 
 labelpath = labelsdir / 'warm_label.tmp'
 labelpath = str(labelpath)
-pd.DataFrame(warm_labels).to_csv(labelpath, header="class_labels",index=None) # TODO: verify this formats correctly for gosdt (shouldn't require headers)
+pd.DataFrame(warm_labels, columns=["class_labels"]).to_csv(labelpath, header="class_labels",index=None)
 
 
 # train GOSDT model
