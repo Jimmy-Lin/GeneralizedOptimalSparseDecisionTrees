@@ -49,7 +49,7 @@ class Encoder:
             return
 
         if self.mode == "tree":
-            from python.model.tree_encoder import TreeEncoder
+            from gosdt.model.tree_encoder import TreeEncoder
             (n,m) = data.shape
             clf = RandomForestClassifier(n_estimators=10, max_features=None, random_state=0)
             clf.fit(data, array([ [i] for i in target ]))  

@@ -6,7 +6,7 @@ notebooks/.ipynb_checkpoints/*
 # Build Objects
 *.o
 *.tmp
-gosdt
+
 gosdt_test
 
 # Autobuild Ignores
@@ -19,5 +19,7 @@ aclocal.m4
 m4
 libtool
 .deps
-gosdt
 gosdt_test
+bin
+.scon*
+.DS_Store

@@ -4,7 +4,7 @@ import time
 import pathlib
 from sklearn.ensemble import GradientBoostingClassifier
 from model.threshold_guess import compute_thresholds
-from model.gosdt import GOSDT
+from gosdt import GOSDT
 
 # read the dataset
 df = pd.read_csv("experiments/datasets/fico.csv", sep=";")
@@ -71,4 +71,5 @@ print("Model training time: {}".format(time))
 print("Training accuracy: {}".format(train_acc))
 print("# of leaves: {}".format(n_leaves))
 print(model.tree)
+
 

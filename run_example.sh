@@ -2,4 +2,4 @@
 
 #SBATCH --mem=200G
 
-python3 python/example.py
+python3 gosdt/example.py

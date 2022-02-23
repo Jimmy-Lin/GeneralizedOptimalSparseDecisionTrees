@@ -69,7 +69,7 @@ static PyObject * build_date(PyObject *self, PyObject *args) { return Py_BuildVa
 static PyObject * build_host(PyObject *self, PyObject *args) { return Py_BuildValue("s", BUILD_HOST);}
 
 // Define the list of methods for a module
-static PyMethodDef gosdt_methods[] = {
+static PyMethodDef libgosdt_methods[] = {
     // { method name, method pointer, method parameter format, method description }
     {"configure", configure, METH_VARARGS, "Configures the algorithm using an input JSON string"},
     {"fit", fit, METH_VARARGS, "Trains the model using an input CSV string"},
@@ -93,15 +93,15 @@ static PyMethodDef gosdt_methods[] = {
 };
 
 // Define the module
-static struct PyModuleDef gosdt = {
+static struct PyModuleDef libgosdt = {
     PyModuleDef_HEAD_INIT,
-    "gosdt", // Module Name
+    "libgosdt", // Module Name
     "Generalized Optimal Sparse Decision Tree", // Module Description
     -1, // Size of per-interpreter state
-    gosdt_methods // Module methods
+    libgosdt_methods // Module methods
 };
 
 // Initialize the module
-PyMODINIT_FUNC PyInit_gosdt(void) {
-    return PyModule_Create(&gosdt);
+PyMODINIT_FUNC PyInit_libgosdt(void) {
+    return PyModule_Create(&libgosdt);
 }
