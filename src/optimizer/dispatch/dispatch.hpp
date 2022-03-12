@@ -36,7 +36,7 @@ bool Optimizer::dispatch(Message const & message, unsigned int id) {
                 signal_exploiters(parents, vertex -> second, id);
             }
 
-            if (true || message.scope >= vertex -> second.upperscope()) {
+            if (Configuration::reference_LB || message.scope >= vertex -> second.upperscope()) {
                 vertex -> second.send_explorers(message.scope, id);
             }
 
@@ -48,7 +48,7 @@ bool Optimizer::dispatch(Message const & message, unsigned int id) {
 
             load_self(identifier, vertex);
 
-            if (vertex -> second.uncertainty() == 0 || (false && vertex -> second.lowerbound() >= vertex -> second.upperscope() - std::numeric_limits<float>::epsilon())) { break; }
+            if (vertex -> second.uncertainty() == 0 || (!Configuration::reference_LB && vertex -> second.lowerbound() >= vertex -> second.upperscope() - std::numeric_limits<float>::epsilon())) { break; }
             bool update = load_children(vertex -> second, message.features, id);
 
             // if (!update) { break; } // XXX Please check if this check still applies 
