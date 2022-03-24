@@ -16,7 +16,8 @@ public:
     static std::string to_string(unsigned int spacing = 0);
 
     static float uncertainty_tolerance; // The maximum allowed global optimality before the optimization can terminate
-    static float regularization; // The penalty incurred for each leaf inthe model
+    static float regularization; // The penalty incurred for each leaf in the model
+    static bool allow_small_reg; // Flag for allowing regularization < 1/n , where n = num_samples (if false, regularizations below 1/n are automatically set to 1/n)
     static float upperbound; // Upperbound on the root problem for pruning problems using a greedy model
 
     static unsigned int time_limit; // The maximum allowed runtime (seconds). 0 means unlimited.

@@ -2,6 +2,7 @@
 
 float Configuration::uncertainty_tolerance = 0.0;
 float Configuration::regularization = 0.05;
+bool Configuration::allow_small_reg = false;
 float Configuration::upperbound = 0.0;
 
 unsigned int Configuration::time_limit = 0;
@@ -43,6 +44,7 @@ void Configuration::configure(std::istream & source) {
 void Configuration::configure(json config) {
     if (config.contains("uncertainty_tolerance")) { Configuration::uncertainty_tolerance = config["uncertainty_tolerance"].get<float>(); }
     if (config.contains("regularization")) { Configuration::regularization = config["regularization"]; }
+    if (config.contains("allow_small_reg")) { Configuration::allow_small_reg = config["allow_small_reg"]; }
     if (config.contains("upperbound")) { Configuration::upperbound = config["upperbound"]; }
 
     if (config.contains("time_limit")) { Configuration::time_limit = config["time_limit"]; }
@@ -96,6 +98,7 @@ std::string Configuration::to_string(unsigned int spacing) {
     json obj = json::object();
     obj["uncertainty_tolerance"] = Configuration::uncertainty_tolerance;
     obj["regularization"] = Configuration::regularization;
+    obj["allow_small_reg"] = Configuration::allow_small_reg;
     obj["upperbound"] = Configuration::upperbound;
 
     obj["time_limit"] = Configuration::time_limit;

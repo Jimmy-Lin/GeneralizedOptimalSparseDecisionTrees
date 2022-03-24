@@ -49,6 +49,15 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
     Optimizer optimizer;
     optimizer.load(data_source);
 
+    n = State::dataset.size();
+    if(Configuration::regularization < 1/n) {
+        std::cout << "Regularization smaller than 1/(num_samples) - this may lead to longer training time if not adjusted." << std::endl;
+        if (!Configuration::allow_small_reg) {
+            std::cout << "Regularization increased to 1/(num_samples) = " << (1/n) << ". To allow regularization below this, set allow_small_reg to true" << std::endl;
+            Configuration::regularization = 1/n;
+        }
+    }
+
     GOSDT::time = 0.0;
     GOSDT::size = 0;
     GOSDT::iterations = 0;
