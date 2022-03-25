@@ -199,6 +199,23 @@ The configuration file is a JSON object and has the following structure and defa
 }
 ```
 
+### Key parameters
+
+**regularization**
+ - Values: Decimal within range [0,1]
+ - Description: Used to penalize complexity. A complexity penalty is added to the risk in the following way.
+   ```
+   ComplexityPenalty = # Leaves x regularization
+   ```
+ - Default: 0.05
+ - Note: We highly recommend setting the regularization to a value larger than 1/num_samples. A small regularization could lead to a longer training time. 
+
+**time_limit**
+ - Values: Decimal greater than or equal to 0
+ - Description: A time limit upon which the algorithm will terminate. If the time limit is reached, the algorithm will terminate with an error.
+ - Special Cases: When set to 0, no time limit is imposed.
+
+
 ### Flags
 
 **balance**
@@ -235,14 +252,7 @@ The configuration file is a JSON object and has the following structure and defa
 
  ### Tuners
 
- **regularization**
- - Values: Decimal within range [0,1]
- - Description: Used to penalize complexity. A complexity penalty is added to the risk in the following way.
-   ```
-   ComplexityPenalty = # Leaves x regularization
-   ```
-
- **uncertainty_tolerance**
+**uncertainty_tolerance**
  - Values: Decimal within range [0,1]
  - Description: Used to allow early termination of the algorithm. Any models produced as a result are guaranteed to score within the lowerbound and upperbound at the time of termination. However, the algorithm does not guarantee that the optimal model is within the produced model unless the uncertainty value has reached 0.
 
@@ -270,11 +280,6 @@ The configuration file is a JSON object and has the following structure and defa
  - Values: Decimal greater than or equal to 0
  - Description: The maximum number of bits used for the finding tile-equivalence
  - Special Cases: When set to 0, no tiling is performed.
-
-**time_limit**
- - Values: Decimal greater than or equal to 0
- - Description: A time limit upon which the algorithm will terminate. If the time limit is reached, the algorithm will terminate with an error.
- - Special Cases: When set to 0, no time limit is imposed.
 
 **worker_limit**
  - Values: Decimal greater than or equal to 1
