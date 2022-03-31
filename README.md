@@ -128,6 +128,12 @@ The configuration is a JSON object and has the following structure and default v
    ComplexityPenalty = # Leaves x regularization
    ```
  - Default: 0.05
+ - **Note: We highly recommend setting the regularization to a value larger than 1/num_samples. A small regularization could lead to a longer training time. If a smaller regularization is preferred, you must set the parameter `allow_small_reg` to true, which by default is false.**
+
+**allow_small_reg**
+- Values: true or false
+- Description: Flag for allowing regularization < 1/n , where n = num_samples (if false, regularizations below 1/n are automatically set to 1/n)
+- Default: false
 
 **depth_budget**
 - Values: Integers >= 1
@@ -138,6 +144,7 @@ The configuration is a JSON object and has the following structure and default v
  - Values: true or false
  - Description: Enables using a vector of misclassifications from another (reference) model to lower bound our own misclassifications
  - Default: false
+ - Note: If `reference_LB` is set to true, you must provide a valid `path_to_labels`. 
 
 **path_to_labels**
 - Values: String representing a path to a file. 
