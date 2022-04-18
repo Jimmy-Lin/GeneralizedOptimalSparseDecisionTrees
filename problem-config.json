@@ -1,0 +1,18 @@
+{
+    "uncertainty_tolerance": 0.0,
+    "regularization": 0.00001,
+    "time_limit": 30,
+    "worker_limit": 4,
+    "tile_limit": 1,
+    "model_limit": 1,
+    "verbose": true,
+    "diagnostics": false,
+    "weight": false,
+    "balance": false,
+    "look_ahead": true,
+    "similar_support": false,
+    "greedy_sampling": false,
+    "cancellation": true,
+    "indifference": false,
+    "strong_indifference": false
+}
