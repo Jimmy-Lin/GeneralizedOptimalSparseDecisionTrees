@@ -17,10 +17,20 @@ shared_files = ['src/bitmask.cpp',
                     'src/reference.cpp',
                     'src/state.cpp',
                     'src/gosdt.cpp']
-
-env = Environment(CCFLAGS = '-std=gnu++11 -O3 -Wall -I include', CPPPATH = ["/usr/local/include", "/usr/include"])
+# Path stuff. There are a lot of possible paths for these things, we may need to add more.
+Possible_CPPPATH = ["/usr/local/include",
+                    "/usr/include",
+                    "/usr/local/opt",
+                    "/usr/local/opt/tbb@2020/include"]
+# Same with the lib path.
+Possible_LIBPATH = ['/usr/local/lib',
+                    '/usr/lib',
+                    '/usr/local/opt',
+                    '/usr/local/opt/tbb@2020/lib']
+env = Environment(CCFLAGS = '-std=gnu++11 -O3 -Wall -I include', CPPPATH = Possible_CPPPATH)
 conf = Configure(env)
-if not conf.CheckCXXHeader('tbb/scalable_allocator.h'):
+# Note that since Macs require a weird version of tbb, we check around
+if (not conf.CheckCXXHeader('tbb/scalable_allocator.h')):
     print("A header file was not found, please ensure that you have the correct version of tbb (2020_U3) which is NOT the most recent version")
     print('Please note that if you do something like "brew install tbb@2020" you will need to create the symlink yourself "brew link tbb@2020" afterwards')
     Exit(1)
@@ -32,7 +42,7 @@ if not conf.CheckCXXHeader("boost/dynamic_bitset.hpp"):
     print("Missing boost")
     Exit(1)
 env.Program(target='bin/gosdt', source= shared_files + ['src/main.cpp'], LIBS = ['tbb', 'tbbmalloc',
-'gmp', 'pthread'], LIBPATH = ['/usr/local/lib', '/usr/lib'])
+'gmp', 'pthread'], LIBPATH = Possible_LIBPATH)
 env.Program(target = 'bin/gosdt_tests', source = shared_files + ['test/test.cpp'], LIBS = ['tbb', 'tbbmalloc', 'gmp', 'pthread'],
-LIBPATH = ['/usr/local/lib', '/usr/lib'])
+LIBPATH = Possible_LIBPATH)
 
