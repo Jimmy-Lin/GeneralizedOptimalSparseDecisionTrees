@@ -21,12 +21,14 @@ shared_files = ['src/bitmask.cpp',
 Possible_CPPPATH = ["/usr/local/include",
                     "/usr/include",
                     "/usr/local/opt",
-                    "/usr/local/opt/tbb@2020/include"]
+                    "/usr/local/opt/tbb@2020/include",
+                    "/opt/homebrew/opt/tbb@2020/include"]
 # Same with the lib path.
 Possible_LIBPATH = ['/usr/local/lib',
                     '/usr/lib',
                     '/usr/local/opt',
-                    '/usr/local/opt/tbb@2020/lib']
+                    '/usr/local/opt/tbb@2020/lib',
+                    'opt/homebrew/opt/tbb@2020/lib']
 env = Environment(CCFLAGS = '-std=gnu++11 -O3 -Wall -I include', CPPPATH = Possible_CPPPATH)
 conf = Configure(env)
 # Note that since Macs require a weird version of tbb, we check around
