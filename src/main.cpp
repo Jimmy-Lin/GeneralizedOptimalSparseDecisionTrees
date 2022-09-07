@@ -3,10 +3,11 @@
 
 int main(int argc, char *argv[]) {
 
-	struct pollfd file_descriptors;
-	file_descriptors.fd = 0; /* this is STDIN */
-	file_descriptors.events = POLLIN;
-	bool standard_input = poll(& file_descriptors, 1, 0) == 1;
+//	struct pollfd file_descriptors;
+//	file_descriptors.fd = 0; /* this is STDIN */
+//	file_descriptors.events = POLLIN;
+//	bool standard_input = poll(& file_descriptors, 1, 0) == 1;
+bool standard_input = false;
 
 	std::cout << "gosdt-" << BUILD_GIT_REV << " (" << BUILD_DATE << " on " << BUILD_HOST << ")" << std::endl;
 
