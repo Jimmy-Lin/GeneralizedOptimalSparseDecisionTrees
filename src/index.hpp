@@ -5,11 +5,11 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/vector_proxy.hpp>
-#include <boost/numeric/ublas/vector_expression.hpp>
+//#include <boost/numeric/ublas/vector.hpp>
+//#include <boost/numeric/ublas/vector_proxy.hpp>
+//#include <boost/numeric/ublas/vector_expression.hpp>
 #include <tbb/scalable_allocator.h>
-#include <simdpp/simd.h>
+//#include <simdpp/simd.h>
 
 #ifdef INCLUDE_OPENCL
 #include <opencl/cl.hpp>
@@ -19,9 +19,9 @@
 #include "bitmask.hpp"
 
 // @note: vector type used for representing GPU floating point vector
-typedef boost::numeric::ublas::vector< float > blasvector;
+//typedef boost::numeric::ublas::vector< float > blasvector;
 // @note: vector type used for representing GPU mask
-typedef boost::numeric::ublas::vector< bitblock > blasmask;
+//typedef boost::numeric::ublas::vector< bitblock > blasmask;
 
 // Container used to store prefix sums of vectors which help accelerate our calculations
 // multiple vectors are stored in this container so that ranges don't need to be recomputed for each vector
