@@ -1,4 +1,6 @@
 #include "task.hpp"
+#include "graph.hpp"
+#include "state.hpp"
 
 Task::Task(void) {}
 

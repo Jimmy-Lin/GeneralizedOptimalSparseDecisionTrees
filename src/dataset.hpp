@@ -29,7 +29,7 @@ class Dataset;
 #include "configuration.hpp"
 #include "encoder.hpp"
 #include "index.hpp"
-#include "state.hpp"
+//#include "state.hpp" // FIREWOLF: Circular References: Moved to cpp.
 #include "tile.hpp"
 #include "reference.hpp"
 
