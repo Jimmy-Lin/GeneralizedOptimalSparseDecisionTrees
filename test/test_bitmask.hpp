@@ -630,42 +630,43 @@ int test_bitmask(void) {
         failures += expect(true, mask == other_mask, "Bitmask::operator==", context);
     }
 
-    {
-        std::string context = "Test consistency across different constructors";
-        unsigned int size = 128;
-        unsigned int num_blocks, offset;
-        Bitmask::block_layout(size, &num_blocks, &offset);
-
-        // Allocate the stack space
-        bitblock * a_source = (bitblock *)alloca(sizeof(bitblock) * num_blocks);
-        Bitmask::zeros(a_source, size);        
-        Bitmask a(a_source, size);
-
-        Bitmask b(size, false);
-
-        dynamic_bitset c_source(size);
-        for (unsigned int i = 0; i < size; ++i) { c_source[i] = 0; }
-        Bitmask c(c_source);
-
-        Bitmask d(c);
-
-        failures += expect(true, a == a, "Bitmask::operator==(a,a)", context);
-        failures += expect(true, a == b, "Bitmask::operator==(a,b)", context);
-        failures += expect(true, a == c, "Bitmask::operator==(a,c)", context);
-        failures += expect(true, a == d, "Bitmask::operator==(a,d)", context);
-        failures += expect(true, b == a, "Bitmask::operator==(b,a)", context);
-        failures += expect(true, b == b, "Bitmask::operator==(b,b)", context);
-        failures += expect(true, b == c, "Bitmask::operator==(b,c)", context);
-        failures += expect(true, b == d, "Bitmask::operator==(b,d)", context);
-        failures += expect(true, c == a, "Bitmask::operator==(c,a)", context);
-        failures += expect(true, c == b, "Bitmask::operator==(c,b)", context);
-        failures += expect(true, c == c, "Bitmask::operator==(c,c)", context);
-        failures += expect(true, c == d, "Bitmask::operator==(c,d)", context);
-        failures += expect(true, d == a, "Bitmask::operator==(d,a)", context);
-        failures += expect(true, d == b, "Bitmask::operator==(d,b)", context);
-        failures += expect(true, d == c, "Bitmask::operator==(d,c)", context);
-        failures += expect(true, d == d, "Bitmask::operator==(d,d)", context);
-    }
+    // FIREWOLF: boost has been removed
+//    {
+//        std::string context = "Test consistency across different constructors";
+//        unsigned int size = 128;
+//        unsigned int num_blocks, offset;
+//        Bitmask::block_layout(size, &num_blocks, &offset);
+//
+//        // Allocate the stack space
+//        bitblock * a_source = (bitblock *)alloca(sizeof(bitblock) * num_blocks);
+//        Bitmask::zeros(a_source, size);
+//        Bitmask a(a_source, size);
+//
+//        Bitmask b(size, false);
+//
+//        dynamic_bitset c_source(size);
+//        for (unsigned int i = 0; i < size; ++i) { c_source[i] = 0; }
+//        Bitmask c(c_source);
+//
+//        Bitmask d(c);
+//
+//        failures += expect(true, a == a, "Bitmask::operator==(a,a)", context);
+//        failures += expect(true, a == b, "Bitmask::operator==(a,b)", context);
+//        failures += expect(true, a == c, "Bitmask::operator==(a,c)", context);
+//        failures += expect(true, a == d, "Bitmask::operator==(a,d)", context);
+//        failures += expect(true, b == a, "Bitmask::operator==(b,a)", context);
+//        failures += expect(true, b == b, "Bitmask::operator==(b,b)", context);
+//        failures += expect(true, b == c, "Bitmask::operator==(b,c)", context);
+//        failures += expect(true, b == d, "Bitmask::operator==(b,d)", context);
+//        failures += expect(true, c == a, "Bitmask::operator==(c,a)", context);
+//        failures += expect(true, c == b, "Bitmask::operator==(c,b)", context);
+//        failures += expect(true, c == c, "Bitmask::operator==(c,c)", context);
+//        failures += expect(true, c == d, "Bitmask::operator==(c,d)", context);
+//        failures += expect(true, d == a, "Bitmask::operator==(d,a)", context);
+//        failures += expect(true, d == b, "Bitmask::operator==(d,b)", context);
+//        failures += expect(true, d == c, "Bitmask::operator==(d,c)", context);
+//        failures += expect(true, d == d, "Bitmask::operator==(d,d)", context);
+//    }
 
     {
         std::string context = "Test Stack Buffer Bitmasks";
