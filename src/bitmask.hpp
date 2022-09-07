@@ -14,7 +14,7 @@
 
 #include "integrity_violation.hpp"
 
-typedef unsigned long bitblock; // Type used to store binary bits
+typedef mp_limb_t bitblock; // Type used to store binary bits
 typedef unsigned short rangeblock; // Type used to chunk the binary bits into  precomputable sequences
 typedef char codeblock; // Type used to store run-length codes for each precomputable sequence
 
