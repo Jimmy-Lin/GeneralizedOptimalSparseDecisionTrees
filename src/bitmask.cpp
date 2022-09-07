@@ -1,4 +1,6 @@
 #include "bitmask.hpp"
+#include <cmath>
+#include <cstring>
 
 // ********************************
 // ** Function Module Definition **
@@ -67,7 +69,7 @@ unsigned int Bitmask::count(bitblock * const blocks, unsigned int size) {
     unsigned int number_of_blocks, block_offset;
     Bitmask::block_layout(size, & number_of_blocks, & block_offset);
     Bitmask::clean(blocks, number_of_blocks, block_offset);
-    return mpn_popcount(blocks, number_of_blocks);
+    return mpn_popcount((mp_ptr) blocks, number_of_blocks);
 }
 
 // @note this returns the number of contiguous sequences of 1's
@@ -97,11 +99,11 @@ void Bitmask::bit_and(bitblock * const blocks, bitblock * other_blocks, unsigned
 
     if (!flip) {
         // Special Offload to GMP Implementation
-        mpn_and_n(other_blocks, other_blocks, blocks, number_of_blocks);
+        mpn_and_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) blocks, number_of_blocks);
     } else {
         // Special Offload to GMP Implementation
-        mpn_nior_n(other_blocks, other_blocks, other_blocks, number_of_blocks);
-        mpn_nior_n(other_blocks, other_blocks, blocks, number_of_blocks);
+        mpn_nior_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) other_blocks, number_of_blocks);
+        mpn_nior_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) blocks, number_of_blocks);
     }
 }
 
@@ -112,11 +114,11 @@ void Bitmask::bit_or(bitblock * blocks, bitblock * other_blocks, unsigned int si
 
     if (!flip) {
         // Special Offload to GMP Implementation
-        mpn_ior_n(other_blocks, other_blocks, blocks, number_of_blocks);
+        mpn_ior_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) blocks, number_of_blocks);
     } else {
         // Special Offload to GMP Implementation
-        mpn_nand_n(other_blocks, other_blocks, other_blocks, number_of_blocks);
-        mpn_nand_n(other_blocks, other_blocks, blocks, number_of_blocks);
+        mpn_nand_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) other_blocks, number_of_blocks);
+        mpn_nand_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) blocks, number_of_blocks);
     }
 }
 
@@ -127,10 +129,10 @@ void Bitmask::bit_xor(bitblock * const blocks, bitblock * other_blocks, unsigned
 
     if (!flip) {
         // Special Offload to GMP Implementation
-        mpn_xor_n(other_blocks, other_blocks, blocks, number_of_blocks);
+        mpn_xor_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) blocks, number_of_blocks);
     } else {
         // Special Offload to GMP Implementation
-        mpn_xnor_n(other_blocks, other_blocks, blocks, number_of_blocks);
+        mpn_xnor_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) blocks, number_of_blocks);
     }
 }
 
@@ -142,12 +144,12 @@ bool Bitmask::equals(bitblock * const blocks, bitblock * const other_blocks, uns
     Bitmask::clean(other_blocks, number_of_blocks, block_offset);
 
     if (!flip) {
-        return mpn_cmp(blocks, other_blocks, number_of_blocks) == 0;
+        return mpn_cmp((mp_ptr) blocks, (mp_ptr) other_blocks, number_of_blocks) == 0;
     } else {
-        mpn_nand_n(blocks, blocks, blocks, number_of_blocks);
+        mpn_nand_n((mp_ptr) blocks, (mp_ptr) blocks, (mp_ptr) blocks, number_of_blocks);
         Bitmask::clean(blocks, number_of_blocks, block_offset);
-        bool equals = mpn_cmp(blocks, other_blocks, number_of_blocks) == 0;
-        mpn_nand_n(blocks, blocks, blocks, number_of_blocks);
+        bool equals = mpn_cmp((mp_ptr) blocks, (mp_ptr) other_blocks, number_of_blocks) == 0;
+        mpn_nand_n((mp_ptr) blocks, (mp_ptr) blocks, (mp_ptr) blocks, number_of_blocks);
         Bitmask::clean(blocks, number_of_blocks, block_offset);
         return equals;
     }
@@ -159,7 +161,7 @@ int Bitmask::compare(bitblock * const left, bitblock * const right, unsigned int
     Bitmask::block_layout(size, & number_of_blocks, & block_offset);
     Bitmask::clean(left, number_of_blocks, block_offset);
     Bitmask::clean(right, number_of_blocks, block_offset);
-    return mpn_cmp(left, right, number_of_blocks);
+    return mpn_cmp((mp_ptr) left, (mp_ptr) right, number_of_blocks);
 }
 
 bool Bitmask::less_than(bitblock * const left, bitblock * const right, unsigned int size) {
@@ -236,7 +238,7 @@ int Bitmask::scan(bitblock * const blocks, int size, int start, bool value) {
             if (block_index >= number_of_blocks) { return size; }
             block = blocks[block_index];
         }
-        int bit_index = mpn_scan1(& block, 0);
+        int bit_index = mpn_scan1((mp_ptr) & block, 0);
         return block_index * Bitmask::bits_per_block + bit_index;
     } else {
         bitblock skip_block = ~((bitblock)(0));
@@ -247,7 +249,7 @@ int Bitmask::scan(bitblock * const blocks, int size, int start, bool value) {
             if (block_index >= number_of_blocks) { return size; }
             block = blocks[block_index];
         }
-        int bit_index = mpn_scan0(& block, 0);
+        int bit_index = mpn_scan0((mp_ptr) & block, 0);
         return block_index * Bitmask::bits_per_block + bit_index;
     }
 }
@@ -283,7 +285,7 @@ int Bitmask::rscan(bitblock * const blocks, int size, int start, bool value) {
         }
         reverse_block <<= count;
 
-        int bit_index = mpn_scan1(& reverse_block, 0);
+        int bit_index = mpn_scan1((mp_ptr) & reverse_block, 0);
         return (block_index + 1) * Bitmask::bits_per_block - 1 - bit_index;
     } else {
         bitblock skip_block = ~((bitblock)(0));
@@ -308,7 +310,7 @@ int Bitmask::rscan(bitblock * const blocks, int size, int start, bool value) {
         }
         reverse_block <<= count;
 
-        int bit_index = mpn_scan0(& reverse_block, 0);
+        int bit_index = mpn_scan0((mp_ptr) & reverse_block, 0);
         return (block_index + 1) * Bitmask::bits_per_block - 1 - bit_index;
     }
 }
@@ -453,19 +455,19 @@ Bitmask::Bitmask(bitblock * source_blocks, unsigned int size, bitblock * local_b
     this->set_depth_budget(depth_budget);
 }
 
-Bitmask::Bitmask(dynamic_bitset const & source, bitblock * local_buffer, unsigned char depth_budget) {
-    initialize(source.size(), local_buffer);
-
-    // Initialize content using the blocks of this bitset
-    std::vector< bitblock > source_blocks;
-    source_blocks.resize(source.num_blocks());
-    boost::to_block_range(source, source_blocks.begin());
-
-    memcpy(this -> content, source_blocks.data(), this -> _used_blocks * sizeof(bitblock));
-    Bitmask::clean(this -> content, this -> _used_blocks, this -> _offset);
-
-    this->set_depth_budget(depth_budget);
-}
+//Bitmask::Bitmask(dynamic_bitset const & source, bitblock * local_buffer, unsigned char depth_budget) {
+//    initialize(source.size(), local_buffer);
+//
+//    // Initialize content using the blocks of this bitset
+//    std::vector< bitblock > source_blocks;
+//    source_blocks.resize(source.num_blocks());
+//    boost::to_block_range(source, source_blocks.begin());
+//
+//    memcpy(this -> content, source_blocks.data(), this -> _used_blocks * sizeof(bitblock));
+//    Bitmask::clean(this -> content, this -> _used_blocks, this -> _offset);
+//
+//    this->set_depth_budget(depth_budget);
+//}
 
 Bitmask::Bitmask(Bitmask const & source, bitblock * local_buffer) {
     if (source._size == 0) { return; }
@@ -624,7 +626,7 @@ unsigned int Bitmask::count(void) const {
         reason << "Accessing invalid data";
         throw IntegrityViolation("Bitmask::count", reason.str());
     }
-    return mpn_popcount(this -> content, this -> _used_blocks);
+    return mpn_popcount((mp_ptr) this -> content, this -> _used_blocks);
 }
 
 bool Bitmask::empty(void) const {
@@ -633,7 +635,7 @@ bool Bitmask::empty(void) const {
         reason << "Accessing invalid data";
         throw IntegrityViolation("Bitmask::empty", reason.str());
     }
-    return mpn_zero_p(this -> content, this -> _used_blocks);
+    return mpn_zero_p((mp_ptr) this -> content, this -> _used_blocks);
 }
 
 bool Bitmask::full(void) const {
@@ -660,7 +662,7 @@ int Bitmask::scan(int start, bool value) const {
             if (block_index >= this -> _used_blocks) { return size(); }
             block = blocks[block_index];
         }
-        int bit_index = mpn_scan1(& block, 0);
+        int bit_index = mpn_scan1((mp_ptr) & block, 0);
         return block_index * Bitmask::bits_per_block + bit_index;
     } else {
         bitblock skip_block = ~((bitblock)(0));
@@ -672,7 +674,7 @@ int Bitmask::scan(int start, bool value) const {
             if (block_index >= this -> _used_blocks) { return size(); }
             block = blocks[block_index];
         }
-        int bit_index = mpn_scan0(& block, 0);
+        int bit_index = mpn_scan0((mp_ptr) & block, 0);
         return block_index * Bitmask::bits_per_block + bit_index;
     }
 }
@@ -704,7 +706,7 @@ int Bitmask::rscan(int start, bool value) const {
         }
         reverse_block <<= count;
 
-        int bit_index = mpn_scan1(& reverse_block, 0);
+        int bit_index = mpn_scan1((mp_ptr) & reverse_block, 0);
         return (block_index + 1) * Bitmask::bits_per_block - 1 - bit_index;
     } else {
         bitblock skip_block = ~((bitblock)(0));
@@ -729,7 +731,7 @@ int Bitmask::rscan(int start, bool value) const {
         }
         reverse_block <<= count;
 
-        int bit_index = mpn_scan0(& reverse_block, 0);
+        int bit_index = mpn_scan0((mp_ptr) & reverse_block, 0);
         return (block_index + 1) * Bitmask::bits_per_block - 1 - bit_index;
     }
 }
@@ -780,11 +782,11 @@ void Bitmask::bit_and(Bitmask const & other, bool flip) const {
 
     if (!flip) {
         // Special Offload to GMP Implementation
-        mpn_and_n(other_blocks, blocks, other_blocks, block_count);
+        mpn_and_n((mp_ptr) other_blocks, (mp_ptr) blocks, (mp_ptr) other_blocks, block_count);
     } else {
         // Special Offload to GMP Implementation
-        mpn_nior_n(other_blocks, other_blocks, other_blocks, block_count);
-        mpn_nior_n(other_blocks, blocks, other_blocks, block_count);
+        mpn_nior_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) other_blocks, block_count);
+        mpn_nior_n((mp_ptr) other_blocks, (mp_ptr) blocks, (mp_ptr) other_blocks, block_count);
     }
 };
 
@@ -810,11 +812,11 @@ void Bitmask::bit_or(Bitmask const & other, bool flip) const {
 
     if (!flip) {
         // Special Offload to GMP Implementation
-        mpn_ior_n(other_blocks, blocks, other_blocks, block_count);
+        mpn_ior_n((mp_ptr) other_blocks, (mp_ptr) blocks, (mp_ptr) other_blocks, block_count);
     } else {
         // Special Offload to GMP Implementation
-        mpn_nand_n(other_blocks, other_blocks, other_blocks, block_count);
-        mpn_nand_n(other_blocks, blocks, other_blocks, block_count);
+        mpn_nand_n((mp_ptr) other_blocks, (mp_ptr) other_blocks, (mp_ptr) other_blocks, block_count);
+        mpn_nand_n((mp_ptr) other_blocks, (mp_ptr) blocks, (mp_ptr) other_blocks, block_count);
     }
 };
 
@@ -840,10 +842,10 @@ void Bitmask::bit_xor(Bitmask const & other, bool flip) const {
 
     if (!flip) {
         // Special Offload to GMP Implementation
-        mpn_xor_n(other_blocks, blocks, other_blocks, block_count);
+        mpn_xor_n((mp_ptr) other_blocks, (mp_ptr) blocks, (mp_ptr) other_blocks, block_count);
     } else {
         // Special Offload to GMP Implementation
-        mpn_xnor_n(other_blocks, blocks, other_blocks, block_count);
+        mpn_xnor_n((mp_ptr) other_blocks, (mp_ptr) blocks, (mp_ptr) other_blocks, block_count);
     }
 };
 
@@ -883,7 +885,7 @@ bool Bitmask::operator==(Bitmask const & other) const {
     if (this->get_depth_budget() != other.get_depth_budget()) { 
         return false;
     }
-    return (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0);
+    return (mpn_cmp((mp_ptr) this -> content, (mp_ptr) other.data(), this -> _used_blocks) == 0);
 }
 
 bool Bitmask::operator<(Bitmask const & other) const {
@@ -893,7 +895,7 @@ bool Bitmask::operator<(Bitmask const & other) const {
         throw IntegrityViolation("Bitmask::operator<", reason.str());
     }
     return Bitmask::less_than(this -> content, other.data(), this -> _size) ||
-     (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() < other.get_depth_budget());    
+     (mpn_cmp((mp_ptr) this -> content, (mp_ptr) other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() < other.get_depth_budget());
 }
 
 bool Bitmask::operator>(Bitmask const & other) const {
@@ -903,7 +905,7 @@ bool Bitmask::operator>(Bitmask const & other) const {
         throw IntegrityViolation("Bitmask::operator>", reason.str());
     }
     return Bitmask::greater_than(this -> content, other.data(), this -> _size) ||
-     (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() > other.get_depth_budget());
+     (mpn_cmp((mp_ptr) this -> content, (mp_ptr) other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() > other.get_depth_budget());
 }
 
 bool Bitmask::operator!=(Bitmask const & other) const {
