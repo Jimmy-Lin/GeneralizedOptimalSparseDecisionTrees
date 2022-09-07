@@ -17,7 +17,7 @@
 #include <tbb/tick_count.h>
 #include <json/json.hpp>
 
-#include <alloca.h>
+//#include <alloca.h>
 
 #include "configuration.hpp"
 #include "dataset.hpp"
