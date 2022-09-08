@@ -33,24 +33,23 @@ endif()
 #
 
 # Target Definition
-set(TARGET "gosdt")
-set(TARGET_TESTS "${TARGET}_tests")
+set(TARGET_CLI "gosdt_cli")
+set(TARGET_TESTS "gosdt_tests")
+set(TARGET_PYTHON "libgosdt")
 
-# Target: GOSDT
-file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
-list(REMOVE_ITEM SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/python_extension.cpp")
-add_executable(${TARGET} ${SOURCE_FILES})
-target_include_directories(${TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+# Target: GOSDT CLI
+file(GLOB_RECURSE SOURCE_FILES_CLI src/*.cpp)
+list(REMOVE_ITEM SOURCE_FILES_CLI "${CMAKE_SOURCE_DIR}/src/python_extension.cpp")
+add_executable(${TARGET_CLI} ${SOURCE_FILES_CLI})
+target_include_directories(${TARGET_CLI} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Target: GOSDT Tests
-set(SOURCE_FILES_TESTS ${SOURCE_FILES})
+file(GLOB_RECURSE SOURCE_FILES_TESTS src/*.cpp)
+list(REMOVE_ITEM SOURCE_FILES_TESTS "${CMAKE_SOURCE_DIR}/src/python_extension.cpp")
 list(REMOVE_ITEM SOURCE_FILES_TESTS "${CMAKE_SOURCE_DIR}/src/main.cpp")
 list(INSERT SOURCE_FILES_TESTS 0 "${CMAKE_SOURCE_DIR}/test/test.cpp")
 add_executable(${TARGET_TESTS} ${SOURCE_FILES_TESTS})
 target_include_directories(${TARGET_TESTS} PUBLIC ${CMAKE_SOURCE_DIR}/include)
-
-message(STATUS "SRC MAIN: ${SOURCE_FILES}")
-message(STATUS "SRC TEST: ${SOURCE_FILES_TESTS}")
 
 #
 # MARK: - Dependencies
@@ -58,15 +57,30 @@ message(STATUS "SRC TEST: ${SOURCE_FILES_TESTS}")
 
 # Dependencies: Intel TBB
 find_package(TBB REQUIRED)
-target_link_libraries(${TARGET} PRIVATE TBB::tbb)
-target_link_libraries(${TARGET} PRIVATE TBB::tbbmalloc)
+target_link_libraries(${TARGET_CLI} PRIVATE TBB::tbb)
+target_link_libraries(${TARGET_CLI} PRIVATE TBB::tbbmalloc)
 target_link_libraries(${TARGET_TESTS} PRIVATE TBB::tbb)
 target_link_libraries(${TARGET_TESTS} PRIVATE TBB::tbbmalloc)
 
 # Dependencies: GMP
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GMP REQUIRED IMPORTED_TARGET gmp)
-target_link_libraries(${TARGET} PRIVATE PkgConfig::GMP)
-target_include_directories(${TARGET} PRIVATE ${GMP_INCLUDE_DIRS})
+target_link_libraries(${TARGET_CLI} PRIVATE PkgConfig::GMP)
+target_include_directories(${TARGET_CLI} PRIVATE ${GMP_INCLUDE_DIRS})
 target_link_libraries(${TARGET_TESTS} PRIVATE PkgConfig::GMP)
 target_include_directories(${TARGET_TESTS} PRIVATE ${GMP_INCLUDE_DIRS})
+
+# Target: GOSDT Python Module
+if (SKBUILD)
+    message(STATUS "GOSDT is built using scikit-build. Will build the Python module.")
+    find_package(Python3 COMPONENTS Development)
+    file(GLOB_RECURSE SOURCE_FILES_PY src/*.cpp)
+    list(REMOVE_ITEM SOURCE_FILES_PY "${CMAKE_SOURCE_DIR}/src/main.cpp")
+    message(STATUS ${SOURCE_FILES_PY})
+    add_library(${TARGET_PYTHON} MODULE ${SOURCE_FILES_PY})
+    target_include_directories(${TARGET_PYTHON} PRIVATE ${CMAKE_SOURCE_DIR}/include ${Python3_INCLUDE_DIRS} ${GMP_INCLUDE_DIRS})
+    target_link_libraries(${TARGET_PYTHON} TBB::tbb TBB::tbbmalloc PkgConfig::GMP)
+    find_package(PythonExtensions REQUIRED)
+    python_extension_module(${TARGET_PYTHON})
+    install(TARGETS ${TARGET_PYTHON} LIBRARY DESTINATION .)
+endif()
