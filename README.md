@@ -1,5 +1,4 @@
-# This is the code used in the [ICML 2020 paper](https://arxiv.org/abs/2006.08690).
-Click [here for for newer code](https://github.com/ubc-systopia/gosdt-guesses) used in the [AAAI 2022 paper](https://www.aaai.org/AAAI22Papers/AAAI-4608.McTavishH.pdf)
+## This is the code used in the [ICML 2020 paper](https://arxiv.org/abs/2006.08690). Here is [a newer version (https://github.com/ubc-systopia/gosdt-guesses) used in the [AAAI 2022 paper](https://www.aaai.org/AAAI22Papers/AAAI-4608.McTavishH.pdf)
 
 # GOSDT Documentation
 Implementation of [Generalized Optimal Sparse Decision Tree](https://arxiv.org/pdf/2006.08690.pdf).
