@@ -1,0 +1,6 @@
+gmpy2
+matplotlib
+numpy
+pandas
+sklearn
+sortedcontainers

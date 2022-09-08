@@ -1,8 +1,9 @@
-from distutils.core import setup, Extension
 import glob
-import sys
 import os
 import platform
+import setuptools
+from distutils.core import Extension
+
 
 # This script is used to build and/or install the trainer into as Python extension.
 # To build the extention, run: python python/extension/setup.py build
@@ -36,7 +37,7 @@ COMPILE_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB
 LINK_ARGS = OPTIMIZATION + STD + INCLUDES + STDLIB + TBB_LIBS + CL_LIBS + GMP_LIBS
 
 module = Extension(
-    name='gosdt',
+    name="gosdt",
     # sources=['src/python_extension.cpp'],
     sources=[obj for obj in glob.glob('src/*.cpp')],
     language='c++',
@@ -45,8 +46,19 @@ module = Extension(
     extra_objects=[obj for obj in glob.glob('src/*.o')]
 )
 
-setup(
-    name='gosdt',
-    version='0.1.1',
-    ext_modules=[module]
+setuptools.setup(
+    name="gosdt-deprecated",
+    version="0.0.1",
+    author="Jimmy Lin, Chudi Zhong, and others",
+    author_email="jimmy.projects.lin@gmail.com",
+    description="C++ implementation of Generalized Optimal Sparse Decision Trees",
+    ext_modules=[module],
+    url="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees",
+    python_requires='>=3.6',
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: MacOS",
+        "Operating System :: POSIX :: Linux",
+    ],
 )

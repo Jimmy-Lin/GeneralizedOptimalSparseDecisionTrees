@@ -23,7 +23,7 @@ Currently supported as a Python extension.
 ## Installing Dependencies
 Refer to [**Dependency Installation**](/doc/dependencies.md##Installation)
 
-## As a Stand-Alone Command Line Program
+## Stand-Alone Command Line Program
 ### Installation
 ```
 ./autobuild --install
@@ -40,15 +40,19 @@ For examples of dataset files, refer to `experiments/datasets/compas/binned.csv`
 For an example configuration file, refer to `experiments/configurations/compas.json`.
 For documentation on the configuration file, refer to [**Dependency Installation**](/doc/configuration.md)
 
-## As a Python Library with C++ Extensions
-### Build and Installation
+## Python-wrapped C++ Extension
+### Installation
+#### x86 Linux or macOS
+```
+pip install gosdt-deprecated
+```
+#### Other platforms
 ```
 ./autobuild --install-python
 ```
 _If you have multiple Python installations, please make sure to build and install using the same Python installation as the one intended for interacting with this library._
 
-
-### Importing the C++ Extension
+### C++ extension example usage
 ```python
 import gosdt
 
@@ -57,7 +61,6 @@ with open ("data.csv", "r") as data_file:
 
 with open ("config.json", "r") as config_file:
     config = config_file.read()
-
 
 print("Config:", config)
 print("Data:", data)
@@ -71,7 +74,9 @@ print("Iterations: ", gosdt.iterations())
 print("Graph Size: ", gosdt.size())
 ```
 
-### Importing Extension with local Python Wrapper
+### With local Python wrapper
+This module is local and not packaged; the following example assumes the user is working in the directory `GeneralizedOptimalSparseDecisionTrees/python`.
+
 ```python
 import pandas as pd
 import numpy as np
@@ -89,6 +94,36 @@ hyperparameters = {
 }
 
 model = GOSDT(hyperparameters)
+model.fit(X, y)
+print("Execution Time: {}".format(model.time))
+
+prediction = model.predict(X)
+training_accuracy = model.score(X, y)
+print("Training Accuracy: {}".format(training_accuracy))
+print(model.tree)
+```
+
+## Scikit-learn-style Python module
+This option is currently only supported on x86-running Linux or macOS platforms. 
+
+### Installation
+```
+pip install imodels
+```
+_[imodels](https://github.com/csinva/imodels) is an interpretable machine learning package containing gosdt among many others ._
+
+### Usage
+```python
+import pandas as pd
+import numpy as np
+from imodels import GOSDTClassifier
+
+dataframe = pd.DataFrame(pd.read_csv("experiments/datasets/monk_2/data.csv"))
+
+X = dataframe[dataframe.columns[:-1]]
+y = dataframe[dataframe.columns[-1:]]
+
+model = GOSDT(regularization=0.1, time_limit=3600, verbose=True)
 model.fit(X, y)
 print("Execution Time: {}".format(model.time))
 
@@ -149,6 +184,9 @@ Refer to [**Dependency Installation**](/doc/dependencies.md##Installation)
    ./autobuild --install-python
    ```
  For a full list of build options, run `./autobuild --help`
+
+### Building wheels for distribution (C++ extension)
+Invoking `.github/workflows/wheels.yml` via Github Actions will output wheels for x86 Linux and macOS platforms using [cibuildwheel](https://github.com/pypa/cibuildwheel), as well as the source distribution.
 
 ---
 

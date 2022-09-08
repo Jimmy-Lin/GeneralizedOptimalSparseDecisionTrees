@@ -21,3 +21,5 @@ libtool
 .deps
 gosdt
 gosdt_test
+*.DS_Store
+wheelhouse/*
