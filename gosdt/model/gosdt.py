@@ -4,7 +4,7 @@ import time
 from numpy import array
 from sklearn.metrics import confusion_matrix, accuracy_score
 
-import libgosdt as gosdt # Import the GOSDT extension
+import gosdt.libgosdt as gosdt # Import the GOSDT extension
 from gosdt.model.encoder import Encoder
 from gosdt.model.imbalance.osdt_imb_v9 import bbound, predict # Import the special objective implementation
 from gosdt.model.tree_classifier import TreeClassifier # Import the tree classification model
