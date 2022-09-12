@@ -33,7 +33,7 @@ endif()
 #
 
 # Target Definition
-set(TARGET_CLI "gosdt_cli")
+set(TARGET_CLI "gosdt")
 set(TARGET_TESTS "gosdt_tests")
 set(TARGET_PYTHON "libgosdt")
 
