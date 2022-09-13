@@ -24,7 +24,7 @@ if __name__ == '__main__':
             dlls = [str(vcpkg / "installed\\x64-windows\\bin\\tbb.dll"),
                     str(vcpkg / "installed\\x64-windows\\bin\\tbbmalloc.dll"),
                     str(vcpkg / "installed\\x64-windows\\bin\\gmp-10.dll")]
-            delvewheel(["repair", "--all-dll", ";".join(dlls), "dist/*.whl", "-w", "dist"])
+            delvewheel(["repair", "--add-dll", ";".join(dlls), "dist/*.whl", "-w", "dist"])
         print("All done.")
         exit(0)
     except subprocess.CalledProcessError:
