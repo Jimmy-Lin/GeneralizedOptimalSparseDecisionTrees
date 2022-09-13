@@ -28,12 +28,10 @@ if __name__ == '__main__':
         if platform.system() == "Windows":
             print("Adding required dynamic libraries to the wheel file...")
             vcpkg = pathlib.Path(os.getenv("VCPKG"))
-            dlls = [str(vcpkg / "installed\\x64-windows\\bin\\tbb.dll"),
-                    str(vcpkg / "installed\\x64-windows\\bin\\tbbmalloc.dll"),
-                    str(vcpkg / "installed\\x64-windows\\bin\\gmp-10.dll")]
+            libs = vcpkg / "installed\\x64-windows\\bin"
             wheels = os.listdir("dist")
             assert len(wheels) == 1, "The number of generated wheels is not 1. All wheels: {}.".format(wheels)
-            delvewheel(["repair", "--add-dll", ";".join(dlls), "dist/{}".format(wheels[0]), "-w", "dist"])
+            delvewheel(["repair", "--no-mangle-all", "--add-path", libs, "dist/{}".format(wheels[0]), "-w", "dist"])
         print("All done.")
         exit(0)
     except subprocess.CalledProcessError:
