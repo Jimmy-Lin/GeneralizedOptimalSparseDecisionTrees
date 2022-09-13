@@ -1,18 +1,8 @@
 import platform
-import sys
 import os
 import pathlib
 from setuptools import find_packages
-
-try:
-    from skbuild import setup
-except ImportError:
-    print(
-        "Please update pip, you need pip 10 or greater,\n"
-        " or you need to install the PEP 518 requirements in pyproject.toml yourself",
-        file=sys.stderr,
-    )
-    raise
+from skbuild import setup
 
 cmake_args = []
 
@@ -25,9 +15,9 @@ print("Additional CMake Arguments = {}".format(cmake_args))
 
 setup(
     name="gosdt",
-    version="9.9.9",
+    version="1.0.5",
     description="Implementation of General Optimal Sparse Decision Tree",
-    author="TODO",
+    author="UBC Systopia Research Lab",
     license="BSD 3-Clause",
     packages=find_packages(where='.'),
     cmake_install_dir="gosdt",
