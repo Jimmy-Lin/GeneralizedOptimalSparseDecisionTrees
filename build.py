@@ -3,7 +3,7 @@ import platform
 import subprocess
 import sys
 import os
-
+import shutil
 
 def setup(args):
     subprocess.run([sys.executable, "setup.py"] + args).check_returncode()
@@ -16,6 +16,8 @@ def delvewheel(args):
 if __name__ == '__main__':
     try:
         print("Rebuilding the project from scratch...")
+        shutil.rmtree("dist")
+        shutil.rmtree("gosdt.egg-info")
         setup(["clean"])
         setup(["bdist_wheel", "--build-type=Release", "-G", "Ninja", "--", "--", "-j{}".format(os.cpu_count())])
         if platform.system() == "Windows":
@@ -24,7 +26,9 @@ if __name__ == '__main__':
             dlls = [str(vcpkg / "installed\\x64-windows\\bin\\tbb.dll"),
                     str(vcpkg / "installed\\x64-windows\\bin\\tbbmalloc.dll"),
                     str(vcpkg / "installed\\x64-windows\\bin\\gmp-10.dll")]
-            delvewheel(["repair", "--add-dll", ";".join(dlls), "dist/*.whl", "-w", "dist"])
+            wheels = os.listdir("dist")
+            assert len(wheels) == 1, "The number of generated wheels is not 1. All wheels: {}.".format(wheels)
+            delvewheel(["repair", "--add-dll", ";".join(dlls), "dist/{}".format(wheels[0]), "-w", "dist"])
         print("All done.")
         exit(0)
     except subprocess.CalledProcessError:
