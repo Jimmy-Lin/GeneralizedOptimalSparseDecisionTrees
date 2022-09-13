@@ -73,14 +73,18 @@ target_include_directories(${TARGET_TESTS} PRIVATE ${GMP_INCLUDE_DIRS})
 # Target: GOSDT Python Module
 if (SKBUILD)
     message(STATUS "GOSDT is built using scikit-build. Will build the Python module.")
+    # Find the Python 3 development environment
     find_package(Python3 COMPONENTS Development)
+    # Create the list of source files needed to build the Python extension
     file(GLOB_RECURSE SOURCE_FILES_PY src/*.cpp)
     list(REMOVE_ITEM SOURCE_FILES_PY "${CMAKE_SOURCE_DIR}/src/main.cpp")
-    message(STATUS ${SOURCE_FILES_PY})
+    # Define the CMake target for the Python extension
     add_library(${TARGET_PYTHON} MODULE ${SOURCE_FILES_PY})
     target_include_directories(${TARGET_PYTHON} PRIVATE ${CMAKE_SOURCE_DIR}/include ${Python3_INCLUDE_DIRS} ${GMP_INCLUDE_DIRS})
     target_link_libraries(${TARGET_PYTHON} TBB::tbb TBB::tbbmalloc PkgConfig::GMP)
+    # Set up the Python extension
     find_package(PythonExtensions REQUIRED)
     python_extension_module(${TARGET_PYTHON})
+    # Install `libgosdt` to the root directory of the Python extension package
     install(TARGETS ${TARGET_PYTHON} LIBRARY DESTINATION .)
 endif()
