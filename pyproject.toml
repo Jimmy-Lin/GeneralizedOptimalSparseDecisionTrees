@@ -2,6 +2,16 @@
 requires = [
     "setuptools>=42",
     "scikit-build",
-    "cmake"
+    "cmake",
+    "setuptools",
+    "wheel",
+    "attrs",
+    "packaging>=20.9",
+    "editables==0.2",
+    "pandas",
+    "sklearn",
+    "sortedcontainers",
+    "gmpy2",
+    "matplotlib"
 ]
 build-backend = "setuptools.build_meta"
