@@ -2,7 +2,6 @@
 requires = [
     "setuptools>=42",
     "scikit-build",
-    "cmake",
     "setuptools",
     "wheel",
     "attrs",

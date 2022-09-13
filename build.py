@@ -17,7 +17,7 @@ if __name__ == '__main__':
     try:
         print("Rebuilding the project from scratch...")
         setup(["clean"])
-        setup(["bdist_wheel", "--build-type=Release", "-G Ninja", "--", "--", "-j{}".format(os.cpu_count())])
+        setup(["bdist_wheel", "--build-type=Release", "-G", "Ninja", "--", "--", "-j{}".format(os.cpu_count())])
         if platform.system() == "Windows":
             print("Adding required dynamic libraries to the wheel file...")
             vcpkg = pathlib.Path(os.getenv("VCPKG"))
@@ -29,4 +29,3 @@ if __name__ == '__main__':
         exit(0)
     except subprocess.CalledProcessError:
         exit(1)
-    
