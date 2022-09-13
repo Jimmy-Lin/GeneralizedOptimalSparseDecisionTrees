@@ -1,4 +1,7 @@
+import platform
 import sys
+import os
+import pathlib
 from setuptools import find_packages
 
 try:
@@ -11,8 +14,14 @@ except ImportError:
     )
     raise
 
-print("Packages:")
-print(find_packages(where="."))
+cmake_args = []
+
+if platform.system() == "Windows":
+    assert "VCPKG" in os.environ, "The environment variable \"VCPKG\" must be set before running this script."
+    toolchain_path = pathlib.Path(os.getenv("VCPKG")) / "scripts/buildsystems/vcpkg.cmake"
+    cmake_args.append("-DCMAKE_TOOLCHAIN_FILE={}".format(toolchain_path))
+
+print("Additional CMake Arguments = {}".format(cmake_args))
 
 setup(
     name="gosdt",
@@ -22,5 +31,6 @@ setup(
     license="BSD 3-Clause",
     packages=find_packages(where='.'),
     cmake_install_dir="gosdt",
+    cmake_args=cmake_args,
     python_requires=">=3.6",
 )
