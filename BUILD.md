@@ -13,19 +13,15 @@ GOSDT uses `CMake` as its default cross-platform build system and `ninja` as the
 brew install cmake
 brew install ninja
 brew install pkgconfig
-brew install tbb
-brew install gmp
 pip3 install --upgrade scikit-build
 ```
 
 **Ubuntu:**
 
 ```bash
-sudo apt install -y libtbb-dev
-sudo apt install -y libgmp-dev
-sudo apt install -y pkgconfig
 sudo apt install -y cmake
 sudo apt install -y ninja-build
+sudo apt install -y pkgconfig
 pip3 install --upgrade scikit-build
 ```
 
@@ -60,8 +56,9 @@ $ENV:VCPKG
 
 **Step 1.3:**
 
-GMP does not come with a CMake module file, so pkgconfig is needed to find the GMP library on Windows, Ubuntu and macOS.
-Please follow the guide on [StackOverflow](https://stackoverflow.com/a/22363820). In short, download all those three zip files, extract them to, for example, `C:\pkgconfig`, and update the PATH variable on Windows.
+GMP does not come with a CMake module file, so pkgconfig is needed to find the GMP library on Windows, Ubuntu and macOS.  
+Please follow the guide on [StackOverflow](https://stackoverflow.com/a/22363820).  
+In short, download all those three zip files, extract them to, for example, `C:\pkgconfig`, and update the PATH variable on Windows.
 
 ### Step 2: Install required 3rd-party libraries
 
