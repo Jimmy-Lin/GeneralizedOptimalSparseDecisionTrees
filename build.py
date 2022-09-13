@@ -13,11 +13,16 @@ def delvewheel(args):
     subprocess.run([sys.executable, "-m", "delvewheel"] + args).check_returncode()
 
 
+def remove_dir_if_exists(str):
+    if os.path.exists(str):
+        shutil.rmtree(str)
+
+
 if __name__ == '__main__':
     try:
         print("Rebuilding the project from scratch...")
-        shutil.rmtree("dist")
-        shutil.rmtree("gosdt.egg-info")
+        remove_dir_if_exists("dist")
+        remove_dir_if_exists("gosdt.egg-info")
         setup(["clean"])
         setup(["bdist_wheel", "--build-type=Release", "-G", "Ninja", "--", "--", "-j{}".format(os.cpu_count())])
         if platform.system() == "Windows":
