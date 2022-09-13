@@ -4,8 +4,9 @@ This page documents how you can build the project and the Python extension modul
 
 ### Step 1: Install required development tools
 
+GOSDT uses `CMake` as its default cross-platform build system and `Ninja` as the default generator for parallel builds.  
 GOSDT relies on `scikit-build` to compile the Python extension and build the redistributable wheel file.  
-GOSDT uses `CMake` as its default cross-platform build system and `ninja` as the default generator for parallel builds.
+GOSDT exploits `delocate`, `auditwheel` and `delvewheel` to copy all required 3rd-party dynamic libraries into the wheel file on macOS, Ubuntu and Windows respectively.
 
 **macOS:**
 
@@ -14,6 +15,7 @@ brew install cmake
 brew install ninja
 brew install pkgconfig
 pip3 install --upgrade scikit-build
+pip3 install --upgrade delocate
 ```
 
 **Ubuntu:**
@@ -23,6 +25,8 @@ sudo apt install -y cmake
 sudo apt install -y ninja-build
 sudo apt install -y pkgconfig
 pip3 install --upgrade scikit-build
+pip3 install --upgrade auditwheel
+sudo apt install -y patchelf # Required by auditwheel
 ```
 
 **Windows:**
@@ -56,7 +60,7 @@ $ENV:VCPKG
 
 **Step 1.3:**
 
-GMP does not come with a CMake module file, so pkgconfig is needed to find the GMP library on Windows, Ubuntu and macOS.  
+GMP does not come with a CMake module file, so `pkgconfig` is needed to find the GMP library on Windows, Ubuntu and macOS.  
 Please follow the guide on [StackOverflow](https://stackoverflow.com/a/22363820).  
 In short, download all those three zip files, extract them to, for example, `C:\pkgconfig`, and update the PATH variable on Windows.
 
@@ -103,6 +107,8 @@ python3 build.py
 
 #### Method 2:
 
+**Step 3.1:** Build the C++ library and the Python wheel
+
 Please adjust the number of threads `-j8` accordingly.
 
 ```bash
@@ -115,13 +121,29 @@ python3 setup.py bdist_wheel --build-type=Release -G Ninja -- -- -j8
 
 You can find the command line tools in `_skbuild/<platform-specific>/cmake-build/` and the wheel file in `dist/`.
 
-If you are using Windows, you need to fix the wheel file by injecting necessary dynamic libraries to it.
+**Step 3.2:** Add all required 3rd-party libraries to the wheel file
+
+Please adjust the name of your wheel file accordingly.
+
+**macOS:**
+
+```bash
+delocate-wheel -w dist -v dist/gosdt-1.0.5-cp310-cp310-macosx_12_0_x86_64.whl
+```
+
+**Ubuntu:**
+
+```bash
+auditwheel repair -w dist --plat linux_x86_64 dist/gosdt-1.0.5-cp310-cp310-linux_x86_64.whl
+```
+
+**Windows:**
 
 ```ps1
 python3 -m delvewheel repair --no-mangle-all --add-path "$ENV:VCPKG\installed\x64-windows\bin" dist/gosdt-1.0.5-cp310-cp310-win_amd64.whl -w dist
 ```
 
-You will then find the fixed wheel file in `dist`.
+You will find the fixed wheel file in `dist`.
 
 #### Method 3:
 
