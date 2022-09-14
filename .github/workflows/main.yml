@@ -97,8 +97,9 @@ jobs:
               run: |
                   python3 build.py
             # Run the sample experiment
-            - name: Install the GOSDT Python module
+            - name: Install the GOSDT Python module along with its dependencies
               run: |
+                  pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   pip3 install dist/*.whl
             - name: Run the experiment with the example dataset
               run: |
@@ -141,8 +142,9 @@ jobs:
                       cd /source
                       python3.7 build.py
             # Run the sample experiment
-            - name: Install the GOSDT Python module
+            - name: Install the GOSDT Python module along with its dependencies
               run: |
+                  pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   pip3 install dist/*.whl
             - name: Run the experiment with the example dataset
               run: |
