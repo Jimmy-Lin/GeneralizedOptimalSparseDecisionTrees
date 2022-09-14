@@ -100,7 +100,7 @@ jobs:
             - name: Install the GOSDT Python module along with its dependencies
               run: |
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
-                  pip3 install dist/*.whl
+                  python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
             - name: Run the experiment with the example dataset
               run: |
                   python3 gosdt/example.py
@@ -147,7 +147,7 @@ jobs:
 #            - name: Install the GOSDT Python module along with its dependencies
 #              run: |
 #                  pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
-#                  pip3 install dist/*.whl
+#                  python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
 #            - name: Run the experiment with the example dataset
 #              run: |
 #                  python3 gosdt/example.py
