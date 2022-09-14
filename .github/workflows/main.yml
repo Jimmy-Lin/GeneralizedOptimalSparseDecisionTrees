@@ -29,10 +29,21 @@ jobs:
             - name: Checkout the repo
               uses: actions/checkout@v3
             # Install required development tools
-            - name: Install required development tools - Ninja
-              uses: ashutoshvarma/setup-ninja@master
-              with:
-                  version: 1.11.1
+            - name: Install required development tools - Ninja (Ubuntu)
+              if: startsWith(matrix.config.os, 'ubuntu')
+              run: |
+                  sudo apt install -y ninja-build
+            - name: Install required development tools - Ninja (macOS)
+              if: startsWith(matrix.config.os, 'macos')
+              run: |
+                  brew install ninja
+            - name: Install required development tools - Ninja (Windows)
+              if: startsWith(matrix.config.os, 'windows')
+              run: |
+                  Invoke-WebRequest -Uri "https://github.com/ninja-build/ninja/releases/latest/download/ninja-win.zip" -OutFile "C:\ninja-win.zip"
+                  Expand-Archive "C:\ninja-win.zip" -DestinationPath "C:\Windows\"
+                  New-Item -Path "C:\Windows\ninja-build.exe" -ItemType SymbolicLink -Value "C:\Windows\ninja.exe"
+                  Remove-Item C:\ninja-win.zip
             - name: Install required development tools - pkg-config (Windows)
               if: startsWith(matrix.config.os, 'windows')
               run: |
