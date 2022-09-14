@@ -20,15 +20,23 @@ jobs:
                         name: "macOS x86-64",
                         os: macos-12,
                     }
-#                    - {
-#                        name: "Windows x86-64",
-#                        os: windows-2022,
-#                    }
+                    - {
+                        name: "Windows x86-64",
+                        os: windows-2022,
+                    }
         steps:
             # Checkout the repo
             - name: Checkout the repo
               uses: actions/checkout@v3
-            # Install required development tools
+            # Install required development tools: Python 3.7
+            - name: Install required development tools - Python 3.7
+              uses: actions/setup-python@v4
+              with:
+                python-version: '3.7'
+            - name: Verify the Python version
+              run: |
+                  python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 7))"
+            # Install required development tools: Ninja
             - name: Install required development tools - Ninja (Ubuntu)
               if: startsWith(matrix.config.os, 'ubuntu')
               run: |
@@ -44,18 +52,17 @@ jobs:
                   Expand-Archive "C:\ninja-win.zip" -DestinationPath "C:\Windows\"
                   New-Item -Path "C:\Windows\ninja-build.exe" -ItemType SymbolicLink -Value "C:\Windows\ninja.exe"
                   Remove-Item C:\ninja-win.zip
+            # Install required development tools: pkg-config
             - name: Install required development tools - pkg-config (Windows)
               if: startsWith(matrix.config.os, 'windows')
               run: |
                   choco install pkgconfiglite
-            - name: Install required development tools - Python 3.7
-              uses: actions/setup-python@v4
-              with:
-                  python-version: '3.7'
+            # Install required development tools: scikit-build
             - name: Install required development tools - scikit-build
               run: |
                   python3 --version
                   pip3 install --upgrade scikit-build
+            # Install required development tools: Wheel Fixer
             - name: Install required development tools - Wheel Fixer (Ubuntu)
               if: startsWith(matrix.config.os, 'ubuntu')
               run: |
@@ -69,7 +76,7 @@ jobs:
               if: startsWith(matrix.config.os, 'windows')
               run: |
                   pip3 install --upgrade delvewheel
-            # Install required 3rd-party libraries tools
+            # Install required 3rd-party libraries
             - name: Install required 3rd-party libraries (Ubuntu)
               if: startsWith(matrix.config.os, 'ubuntu')
               run: |
