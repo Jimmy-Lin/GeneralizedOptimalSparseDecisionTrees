@@ -70,6 +70,13 @@ target_include_directories(${TARGET_CLI} PRIVATE ${GMP_INCLUDE_DIRS})
 target_link_libraries(${TARGET_TESTS} PRIVATE PkgConfig::GMP)
 target_include_directories(${TARGET_TESTS} PRIVATE ${GMP_INCLUDE_DIRS})
 
+# Dependencies: Threads (pthread on macOS and Ubuntu, win32 thread on Windows)
+# This is needed because the CentOS docker provided by manylinux reports linker errors
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(${TARGET_CLI} PRIVATE Threads::Threads)
+target_link_libraries(${TARGET_TESTS} PRIVATE Threads::Threads)
+
 # Target: GOSDT Python Module
 if (SKBUILD)
     message(STATUS "GOSDT is built using scikit-build. Will build the Python module.")
@@ -83,7 +90,7 @@ if (SKBUILD)
     # Define the CMake target for the Python extension
     add_library(${TARGET_PYTHON} MODULE ${SOURCE_FILES_PY})
     target_include_directories(${TARGET_PYTHON} PRIVATE ${CMAKE_SOURCE_DIR}/include ${Python3_INCLUDE_DIR} ${GMP_INCLUDE_DIRS})
-    target_link_libraries(${TARGET_PYTHON} TBB::tbb TBB::tbbmalloc PkgConfig::GMP)
+    target_link_libraries(${TARGET_PYTHON} TBB::tbb TBB::tbbmalloc PkgConfig::GMP Threads::Threads)
     # Set up the Python extension
     find_package(PythonExtensions REQUIRED)
     python_extension_module(${TARGET_PYTHON})
