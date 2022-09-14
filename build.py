@@ -44,18 +44,14 @@ def repair_wheel(wheel) -> None:
     """
     # Fetch the current operating system
     system = platform.system()
-    # Fetch the name of the generated wheel file
-    wheels = os.listdir("dist")
-    assert len(wheels) == 1, "The number of generated wheels is not 1. All wheels: {}.".format(wheels)
-    wheel_path = "dist/{}".format(wheels[0])
     # Repair the wheel
     if system == "Darwin":
-        delocate_wheel(["-w", "dist", "-v", wheel_path])
+        delocate_wheel(["-w", "dist", "-v", wheel])
     elif system == "Linux":
-        auditwheel(["repair", "-w", "dist", "--plat", "linux_x86_64", wheel_path])
+        auditwheel(["repair", "-w", "dist", "--plat", "linux_x86_64", wheel])
     elif system == "Windows":
-        search_path = pathlib.Path(os.getenv("VCPKG_INSTALLATION_ROOT")) / "installed\\x64-windows\\bin"
-        delvewheel(["repair", "--no-mangle-all", "--add-path", search_path, wheel_path, "-w", "dist"])
+        search_path = str(pathlib.Path(os.getenv("VCPKG_INSTALLATION_ROOT")) / "installed\\x64-windows\\bin")
+        delvewheel(["repair", "--no-mangle-all", "--add-path", search_path, wheel, "-w", "dist"])
     else:
         print("{} is not supported.".format(system))
         raise EnvironmentError
