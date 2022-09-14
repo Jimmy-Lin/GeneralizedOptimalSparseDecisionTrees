@@ -4,6 +4,7 @@ requires = [
     "scikit-build",
     "setuptools",
     "wheel",
+    "distro",
     "attrs",
     "packaging>=20.9",
     "editables==0.2",

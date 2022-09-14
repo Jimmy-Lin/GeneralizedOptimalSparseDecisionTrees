@@ -2,13 +2,14 @@ import platform
 import os
 import pathlib
 import sys
+import distro
 
 from setuptools import find_packages
 from skbuild import setup
 
 cmake_args = []
 
-if platform.system() == "Windows":
+if platform.system() == "Windows" or (platform.system() == "Linux" and distro.id() == "centos"):
     assert "VCPKG_INSTALLATION_ROOT" in os.environ, \
         "The environment variable \"VCPKG_INSTALLATION_ROOT\" must be set before running this script."
     toolchain_path = pathlib.Path(os.getenv("VCPKG_INSTALLATION_ROOT")) / "scripts/buildsystems/vcpkg.cmake"
