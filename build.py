@@ -50,15 +50,16 @@ def repair_wheel(wheel) -> None:
         delocate_wheel(["-w", "dist", "-v", wheel])
     elif system == "Linux":
         distribution = distro.id()
-        target = None
         if distribution == "ubuntu":
-            target = "linux_x86_64"
+            auditwheel(["repair", "-w", "dist", "--plat", "linux_x86_64", wheel])
         elif distribution == "centos":
-            target = "manylinux_2_17_x86_64"
+            auditwheel(["repair", "-w", "dist", "--plat", "manylinux_2_17_x86_64", wheel])
+            # Remove the original wheel
+            # The fixed wheel has a difference file name
+            os.remove(wheel)
         else:
             print("Linux distribution {} is not supported by this script.".format(distribution))
             raise EnvironmentError
-        auditwheel(["repair", "-w", "dist", "--plat", target, wheel])
     elif system == "Windows":
         search_path = str(pathlib.Path(os.getenv("VCPKG_INSTALLATION_ROOT")) / "installed\\x64-windows\\bin")
         delvewheel(["repair", "--no-mangle-all", "--add-path", search_path, wheel, "-w", "dist"])
