@@ -20,10 +20,10 @@ jobs:
                         name: "macOS x86-64",
                         os: macos-12,
                     }
-                    - {
-                        name: "Windows x86-64",
-                        os: windows-2022,
-                    }
+#                    - {
+#                        name: "Windows x86-64",
+#                        os: windows-2022,
+#                    }
         steps:
             # Checkout the repo
             - name: Checkout the repo
@@ -36,11 +36,11 @@ jobs:
             - name: Install required development tools - pkgconfig (Ubuntu)
               if: startsWith(matrix.config.os, 'ubuntu')
               run: |
-                  sudo apt install -y pkgconfig
+                  sudo apt install -y pkg-config
             - name: Install required development tools - pkgconfig (macOS)
               if: startsWith(matrix.config.os, 'macos')
               run: |
-                  brew install pkgconfig
+                  brew install pkg-config
             - name: Install required development tools - pkgconfig (Windows)
               if: startsWith(matrix.config.os, 'windows')
               run: |
@@ -51,6 +51,7 @@ jobs:
                   python-version: '3.7'
             - name: Install required development tools - scikit-build
               run: |
+                  python3 --version
                   pip3 install --upgrade scikit-build
             - name: Install required development tools - Wheel Fixer (Ubuntu)
               if: startsWith(matrix.config.os, 'ubuntu')
