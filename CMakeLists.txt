@@ -74,19 +74,15 @@ target_include_directories(${TARGET_TESTS} PRIVATE ${GMP_INCLUDE_DIRS})
 if (SKBUILD)
     message(STATUS "GOSDT is built using scikit-build. Will build the Python module.")
     # Find the Python 3 development environment
-    if (DEFINED ENV{PYTHON3_VERSION})
-        message(STATUS "Will search for Python $ENV{PYTHON3_VERSION} development environment.")
-        find_package(Python3 $ENV{PYTHON3_VERSION} EXACT COMPONENTS Development REQUIRED)
-    else()
-        message(STATUS "Will search for the latest Python 3 development environment.")
-        find_package(Python3 COMPONENTS Development REQUIRED)
+    if (NOT DEFINED Python3_INCLUDE_DIR)
+        message(FATAL_ERROR "The CMake variable Python3_INCLUDE_DIR should have been defined by scikit-build.")
     endif()
     # Create the list of source files needed to build the Python extension
     file(GLOB_RECURSE SOURCE_FILES_PY src/*.cpp)
     list(REMOVE_ITEM SOURCE_FILES_PY "${CMAKE_SOURCE_DIR}/src/main.cpp")
     # Define the CMake target for the Python extension
     add_library(${TARGET_PYTHON} MODULE ${SOURCE_FILES_PY})
-    target_include_directories(${TARGET_PYTHON} PRIVATE ${CMAKE_SOURCE_DIR}/include ${Python3_INCLUDE_DIRS} ${GMP_INCLUDE_DIRS})
+    target_include_directories(${TARGET_PYTHON} PRIVATE ${CMAKE_SOURCE_DIR}/include ${Python3_INCLUDE_DIR} ${GMP_INCLUDE_DIRS})
     target_link_libraries(${TARGET_PYTHON} TBB::tbb TBB::tbbmalloc PkgConfig::GMP)
     # Set up the Python extension
     find_package(PythonExtensions REQUIRED)
