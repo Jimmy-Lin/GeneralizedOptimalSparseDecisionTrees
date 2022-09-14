@@ -1,4 +1,6 @@
 #include "bitmask.hpp"
+#include <cmath>
+#include <cstring>
 
 // ********************************
 // ** Function Module Definition **
@@ -453,19 +455,19 @@ Bitmask::Bitmask(bitblock * source_blocks, unsigned int size, bitblock * local_b
     this->set_depth_budget(depth_budget);
 }
 
-Bitmask::Bitmask(dynamic_bitset const & source, bitblock * local_buffer, unsigned char depth_budget) {
-    initialize(source.size(), local_buffer);
-
-    // Initialize content using the blocks of this bitset
-    std::vector< bitblock > source_blocks;
-    source_blocks.resize(source.num_blocks());
-    boost::to_block_range(source, source_blocks.begin());
-
-    memcpy(this -> content, source_blocks.data(), this -> _used_blocks * sizeof(bitblock));
-    Bitmask::clean(this -> content, this -> _used_blocks, this -> _offset);
-
-    this->set_depth_budget(depth_budget);
-}
+//Bitmask::Bitmask(dynamic_bitset const & source, bitblock * local_buffer, unsigned char depth_budget) {
+//    initialize(source.size(), local_buffer);
+//
+//    // Initialize content using the blocks of this bitset
+//    std::vector< bitblock > source_blocks;
+//    source_blocks.resize(source.num_blocks());
+//    boost::to_block_range(source, source_blocks.begin());
+//
+//    memcpy(this -> content, source_blocks.data(), this -> _used_blocks * sizeof(bitblock));
+//    Bitmask::clean(this -> content, this -> _used_blocks, this -> _offset);
+//
+//    this->set_depth_budget(depth_budget);
+//}
 
 Bitmask::Bitmask(Bitmask const & source, bitblock * local_buffer) {
     if (source._size == 0) { return; }
@@ -893,7 +895,7 @@ bool Bitmask::operator<(Bitmask const & other) const {
         throw IntegrityViolation("Bitmask::operator<", reason.str());
     }
     return Bitmask::less_than(this -> content, other.data(), this -> _size) ||
-     (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() < other.get_depth_budget());    
+     (mpn_cmp(this -> content, other.data(), this -> _used_blocks) == 0 && this->get_depth_budget() < other.get_depth_budget());
 }
 
 bool Bitmask::operator>(Bitmask const & other) const {

@@ -8,17 +8,17 @@
 #include <iostream>
 #include <sstream>
 #include <gmp.h>
-#include <boost/dynamic_bitset.hpp>
-#include <simdpp/simd.h>
+//#include <boost/dynamic_bitset.hpp>
+//#include <simdpp/simd.h>
 #include <tbb/scalable_allocator.h>
 
 #include "integrity_violation.hpp"
 
-typedef unsigned long bitblock; // Type used to store binary bits
+typedef mp_limb_t bitblock; // Type used to store binary bits
 typedef unsigned short rangeblock; // Type used to chunk the binary bits into  precomputable sequences
 typedef char codeblock; // Type used to store run-length codes for each precomputable sequence
 
-typedef boost::dynamic_bitset< unsigned long long > dynamic_bitset;
+//typedef boost::dynamic_bitset< unsigned long long > dynamic_bitset;
 
 // This declaration acts as both a function module and a container class
 // The static class methods implements a function module providing operations on arrays of type bitblock, which can be allocated on the stack
@@ -161,7 +161,7 @@ public:
     // Construction by copying from a stack-based bitblock array
     Bitmask(bitblock * blocks, unsigned int block_count, bitblock * local_buffer=NULL, unsigned char depth_budget = 0);
     // Construction by copying from a dynamic_bitset
-    Bitmask(dynamic_bitset const & source, bitblock * local_buffer=NULL, unsigned char depth_budget = 0);
+    //Bitmask(dynamic_bitset const & source, bitblock * local_buffer=NULL, unsigned char depth_budget = 0);
     // Construction by copying from another instance
     Bitmask(Bitmask const & source, bitblock * local_buffer=NULL);
 

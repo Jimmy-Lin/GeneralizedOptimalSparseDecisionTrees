@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #include <stdio.h>
-#include <sys/poll.h>
+//#include <sys/poll.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>

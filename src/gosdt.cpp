@@ -1,7 +1,7 @@
 #include "gosdt.hpp"
 
-#include <sys/time.h>
-#include <sys/resource.h>
+//#include <sys/time.h>
+//#include <sys/resource.h>  // FIREWOLF: Incompatible with Windows
 
 #define _DEBUG true
 #define THROTTLE false
@@ -59,10 +59,10 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
 
     if(Configuration::verbose) { std::cout << "Starting Optimization" << std::endl; }
 
-    static struct rusage usage_start, usage_end;
-    if (getrusage(RUSAGE_SELF, &usage_start)) {
-         std::cout << "WARNING: rusage returned non-zero value" << std::endl;
-    }
+//    static struct rusage usage_start, usage_end;
+//    if (getrusage(RUSAGE_SELF, &usage_start)) {
+//         std::cout << "WARNING: rusage returned non-zero value" << std::endl;
+//    }
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -70,12 +70,12 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
     if (Configuration::worker_limit > 1) {
         for (unsigned int i = 0; i < Configuration::worker_limit; ++i) {
             workers.emplace_back(work, i, std::ref(optimizer), std::ref(iterations[i]));
-            #ifndef __APPLE__
-            // If using Ubuntu Build, we can pin each thread to a specific CPU core to improve cache locality
-            cpu_set_t cpuset; CPU_ZERO(&cpuset); CPU_SET(i, &cpuset);
-            int error = pthread_setaffinity_np(workers[i].native_handle(), sizeof(cpu_set_t), &cpuset);
-            if (error != 0) { std::cerr << "Error calling pthread_setaffinity_np: " << error << std::endl; }
-            #endif
+//            #ifndef __APPLE__
+//            // If using Ubuntu Build, we can pin each thread to a specific CPU core to improve cache locality
+//            cpu_set_t cpuset; CPU_ZERO(&cpuset); CPU_SET(i, &cpuset);
+//            int error = pthread_setaffinity_np(workers[i].native_handle(), sizeof(cpu_set_t), &cpuset);
+//            if (error != 0) { std::cerr << "Error calling pthread_setaffinity_np: " << error << std::endl; }
+//            #endif
         }
         for (auto iterator = workers.begin(); iterator != workers.end(); ++iterator) { (* iterator).join(); } // Wait for the thread pool to terminate
     }else { 
@@ -83,24 +83,24 @@ void GOSDT::fit(std::istream & data_source, std::unordered_set< Model > & models
     }
 
     auto stop = std::chrono::high_resolution_clock::now(); // Stop measuring training time
-
-    if (getrusage(RUSAGE_SELF, &usage_end)) {
-        std::cout << "WARNING: rusage returned non-zero value" << std::endl;
-        GOSDT::ru_utime = -1;
-        GOSDT::ru_stime = -1;
-        GOSDT::ru_maxrss = -1;
-        GOSDT::ru_nswap = -1;
-        GOSDT::ru_nivcsw = -1;
-    } else {
-        struct timeval delta;
-        timersub(&usage_end.ru_utime, &usage_start.ru_utime, &delta);
-        GOSDT::ru_utime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
-        timersub(&usage_end.ru_stime, &usage_start.ru_stime, &delta);
-        GOSDT::ru_stime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
-        GOSDT::ru_maxrss = usage_end.ru_maxrss;
-        GOSDT::ru_nswap = usage_end.ru_nswap - usage_start.ru_nswap;
-        GOSDT::ru_nivcsw = usage_end.ru_nivcsw - usage_start.ru_nivcsw;
-    }
+// FIREWOLF: Incompatible with Windows MSVC
+//    if (getrusage(RUSAGE_SELF, &usage_end)) {
+//        std::cout << "WARNING: rusage returned non-zero value" << std::endl;
+//        GOSDT::ru_utime = -1;
+//        GOSDT::ru_stime = -1;
+//        GOSDT::ru_maxrss = -1;
+//        GOSDT::ru_nswap = -1;
+//        GOSDT::ru_nivcsw = -1;
+//    } else {
+//        struct timeval delta;
+//        timersub(&usage_end.ru_utime, &usage_start.ru_utime, &delta);
+//        GOSDT::ru_utime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
+//        timersub(&usage_end.ru_stime, &usage_start.ru_stime, &delta);
+//        GOSDT::ru_stime = (float)delta.tv_sec + (((float)delta.tv_usec) / 1000000);
+//        GOSDT::ru_maxrss = usage_end.ru_maxrss;
+//        GOSDT::ru_nswap = usage_end.ru_nswap - usage_start.ru_nswap;
+//        GOSDT::ru_nivcsw = usage_end.ru_nivcsw - usage_start.ru_nivcsw;
+//    }
     GOSDT::time = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1000.0;
     if(Configuration::verbose) { std::cout << "Optimization Complete" << std::endl; }
 

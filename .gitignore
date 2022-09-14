@@ -23,3 +23,16 @@ gosdt_test
 bin
 .scon*
 .DS_Store
+
+## Xcode User settings
+xcuserdata/
+
+.idea/
+.DS_Store
+._DS_Store
+__private/
+cmake*/
+_skbuild/
+dist/
+wheelhouse/
+*.egg-info/

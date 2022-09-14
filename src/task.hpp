@@ -15,10 +15,10 @@ class Task;
 #include "bitmask.hpp"
 #include "configuration.hpp"
 #include "dataset.hpp"
-#include "graph.hpp"
+//#include "graph.hpp" // FIREWOLF: Circular references: Moved to cpp.
 #include "integrity_violation.hpp"
 #include "queue.hpp"
-#include "state.hpp"
+//#include "state.hpp" // FIREWOLF: Circular references: Moved to cpp.
 #include "types.hpp"
 
 class Task {

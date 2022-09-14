@@ -6,16 +6,16 @@
 #include <iostream>
 
 #include <thread>
-#include <pthread.h>
-#include <sched.h>
-#include <unistd.h>
+//#include <pthread.h>
+//#include <sched.h>
+//#include <unistd.h>
 #include <chrono>
 
-#include <boost/dynamic_bitset.hpp>
+//#include <boost/dynamic_bitset.hpp>
 #include <vector>
 #include <string>
 
-#include <alloca.h>
+//#include <alloca.h>
 
 #include <json/json.hpp>
 
