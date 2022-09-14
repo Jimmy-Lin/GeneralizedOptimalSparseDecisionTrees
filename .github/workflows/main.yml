@@ -32,7 +32,7 @@ jobs:
             - name: Install required development tools - Python 3.7
               uses: actions/setup-python@v4
               with:
-                python-version: '3.7'
+                  python-version: '3.7'
             - name: Verify the Python version
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 7))"
@@ -100,5 +100,42 @@ jobs:
             - name: Upload the wheel file
               uses: actions/upload-artifact@v2
               with:
-                name: Artifacts
-                path: dist/*.whl
+                  name: Artifacts
+                  path: dist/*.whl
+    docker:
+        name: "CentOS Docker x86-64"
+        runs-on: ubuntu-22.04
+        steps:
+            # Checkout the repo
+            - name: Checkout the repo
+              uses: actions/checkout@v3
+            # Build the wheel with Docker
+            # Reference: Using Docker Run inside of GitHub Actions
+            # Link: https://aschmelyun.com/blog/using-docker-run-inside-of-github-actions/
+            - name: Build the wheel with Docker
+              uses: addnab/docker-run-action@v3
+              with:
+                  image: quay.io/pypa/manylinux2014_x86_64
+                  options: -v ${{ github.workspace }}:/source
+                  run: |
+                      yum install -y zip
+                      yum install -y cmake
+                      yum install -y ninja-build
+                      yum install -y pkgconfig
+                      python3.7 -m pip install --upgrade scikit-build
+                      python3.7 -m pip install --upgrade auditwheel
+                      yum install -y patchelf
+                      git clone https://github.com/Microsoft/vcpkg.git
+                      ./vcpkg/bootstrap-vcpkg.sh
+                      export PATH=/vcpkg:$PATH
+                      export VCPKG_INSTALLATION_ROOT=/vcpkg
+                      vcpkg install tbb
+                      vcpkg install gmp
+                      cd /source
+                      python3.7 build.py
+            # Upload the wheel file
+            - name: Upload the wheel file
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Artifacts
+                  path: dist/*.whl
