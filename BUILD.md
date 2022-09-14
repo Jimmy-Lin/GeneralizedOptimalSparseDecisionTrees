@@ -13,7 +13,7 @@ GOSDT exploits `delocate`, `auditwheel` and `delvewheel` to copy all required 3r
 ```bash
 brew install cmake
 brew install ninja
-brew install pkgconfig
+brew install pkg-config
 pip3 install --upgrade scikit-build
 pip3 install --upgrade delocate
 ```
@@ -23,7 +23,7 @@ pip3 install --upgrade delocate
 ```bash
 sudo apt install -y cmake
 sudo apt install -y ninja-build
-sudo apt install -y pkgconfig
+sudo apt install -y pkg-config
 pip3 install --upgrade scikit-build
 pip3 install --upgrade auditwheel
 sudo apt install -y patchelf # Required by auditwheel
