@@ -1,6 +1,8 @@
 import platform
 import os
 import pathlib
+import sys
+
 from setuptools import find_packages
 from skbuild import setup
 
@@ -13,6 +15,14 @@ if platform.system() == "Windows":
     cmake_args.append("-DCMAKE_TOOLCHAIN_FILE={}".format(toolchain_path))
 
 print("Additional CMake Arguments = {}".format(cmake_args))
+
+# Fetch the current Python version
+# Set the environment variable so that CMake can find the header search path of the current Python installation
+version_info = sys.version_info
+version = "{}.{}".format(version_info.major, version_info.minor)
+os.environ["PYTHON3_VERSION"] = version
+assert "PYTHON3_VERSION" in os.environ
+print("The current Python version is {}.".format(version))
 
 setup(
     name="gosdt",
