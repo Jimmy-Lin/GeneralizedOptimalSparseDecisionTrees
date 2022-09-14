@@ -184,3 +184,45 @@ cmake --build build --config Release --clean-first --parallel 8
 .\build\Release\gosdt.exe
 .\build\Release\gosdt_tests.exe
 ```
+
+### Step 4: Build the manylinux wheel (Optional)
+
+```bash
+# Change the working directory to this repository
+cd path/to/gosdt-guesses-internal
+
+# Run the CentOS docker provided by manylinux
+# The repository is mapped at /source
+sudo docker run -i -t --mount type=bind,source=`pwd`,target=/source quay.io/pypa/manylinux2014_x86_64
+
+# CentOS Shell
+# Install required development tools
+yum install -y zip
+yum install -y cmake
+yum install -y ninja-build
+yum install pkgconfig
+python3.7 -m pip install --upgrade scikit-build
+python3.7 -m pip install --upgrade auditwheel
+yum install -y patchelf
+
+# Install the VCPKG package manager
+git clone https://github.com/Microsoft/vcpkg.git 
+./vcpkg/bootstrap-vcpkg.sh
+export PATH=/vcpkg:$PATH
+export VCPKG_INSTALLATION_ROOT=/vcpkg
+
+# Install required 3rd-party libraries
+vcpkg install tbb
+vcpkg install gmp
+
+# Change the working directory to the repository
+cd /source
+
+# Build the project and the wheel file
+python3.7 build.py
+
+# Quit the CentOS shell
+exit
+```
+
+You can find the manylinux wheel in `dist`.
