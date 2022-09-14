@@ -13,15 +13,15 @@ jobs:
             matrix:
                 config:
                     - {
-                        name: "Linux x86-64",
+                        name: "Ubuntu 22.04 x86-64",
                         os: ubuntu-22.04,
                     }
                     - {
-                        name: "macOS x86-64",
+                        name: "macOS Monterey x86-64",
                         os: macos-12,
                     }
                     - {
-                        name: "Windows x86-64",
+                        name: "Windows Server 2022 x86-64",
                         os: windows-2022,
                     }
         steps:
@@ -96,6 +96,13 @@ jobs:
             - name: Build the project
               run: |
                   python3 build.py
+            # Run the sample experiment
+            - name: Install the GOSDT Python module
+              run: |
+                  pip3 install dist/*.whl
+            - name: Run the experiment with the example dataset
+              run: |
+                  python3 gosdt/example.py
             # Upload the wheel file
             - name: Upload the wheel file
               uses: actions/upload-artifact@v2
@@ -103,7 +110,7 @@ jobs:
                   name: Artifacts
                   path: dist/*.whl
     docker:
-        name: "CentOS Docker x86-64"
+        name: "CentOS 7 x86-64"
         runs-on: ubuntu-22.04
         steps:
             # Checkout the repo
@@ -133,6 +140,13 @@ jobs:
                       vcpkg install gmp
                       cd /source
                       python3.7 build.py
+            # Run the sample experiment
+            - name: Install the GOSDT Python module
+              run: |
+                  pip3 install dist/*.whl
+            - name: Run the experiment with the example dataset
+              run: |
+                  python3 gosdt/example.py
             # Upload the wheel file
             - name: Upload the wheel file
               uses: actions/upload-artifact@v2

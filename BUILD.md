@@ -193,7 +193,7 @@ cd path/to/gosdt-guesses-internal
 
 # Run the CentOS docker provided by manylinux
 # The repository is mapped at /source
-sudo docker run -i -t --mount type=bind,source=`pwd`,target=/source quay.io/pypa/manylinux2014_x86_64
+docker run -i -t --mount type=bind,source=`pwd`,target=/source quay.io/pypa/manylinux2014_x86_64
 
 # CentOS Shell
 # Install required development tools
@@ -226,3 +226,7 @@ exit
 ```
 
 You can find the manylinux wheel in `dist`.
+
+```bash
+pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+```
