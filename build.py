@@ -1,5 +1,6 @@
 import pathlib
 import platform
+import distro
 import subprocess
 import sys
 import os
@@ -48,7 +49,16 @@ def repair_wheel(wheel) -> None:
     if system == "Darwin":
         delocate_wheel(["-w", "dist", "-v", wheel])
     elif system == "Linux":
-        auditwheel(["repair", "-w", "dist", "--plat", "linux_x86_64", wheel])
+        distribution = distro.id()
+        target = None
+        if distribution == "ubuntu":
+            target = "linux_x86_64"
+        elif distribution == "centos":
+            target = "manylinux_2_17_x86_64"
+        else:
+            print("Linux distribution {} is not supported by this script.".format(distribution))
+            raise EnvironmentError
+        auditwheel(["repair", "-w", "dist", "--plat", target, wheel])
     elif system == "Windows":
         search_path = str(pathlib.Path(os.getenv("VCPKG_INSTALLATION_ROOT")) / "installed\\x64-windows\\bin")
         delvewheel(["repair", "--no-mangle-all", "--add-path", search_path, wheel, "-w", "dist"])
