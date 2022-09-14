@@ -6,6 +6,7 @@ import sys
 import os
 import shutil
 
+
 def setup(args) -> None:
     """
     Interface of the cross-platform scikit-build script
