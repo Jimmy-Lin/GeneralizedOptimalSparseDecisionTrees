@@ -54,7 +54,7 @@ def repair_wheel(wheel) -> None:
     elif system == "Linux":
         auditwheel(["repair", "-w", "dist", "--plat", "linux_x86_64", wheel_path])
     elif system == "Windows":
-        search_path = pathlib.Path(os.getenv("VCPKG")) / "installed\\x64-windows\\bin"
+        search_path = pathlib.Path(os.getenv("VCPKG_INSTALLATION_ROOT")) / "installed\\x64-windows\\bin"
         delvewheel(["repair", "--no-mangle-all", "--add-path", search_path, wheel_path, "-w", "dist"])
     else:
         print("{} is not supported.".format(system))

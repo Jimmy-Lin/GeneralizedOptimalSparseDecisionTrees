@@ -50,12 +50,12 @@ pip3 install --upgrade delvewheel
 Additionally, please follow the [guide](https://vcpkg.io/en/getting-started.html) to install the C++ package manager `vcpkg` on Windows.  
 Once you have installed `vcpkg`, for example, to `C:\vcpkg`, you need to...
 - Update your `PATH` variable to include `C:\vcpkg`.
-- Add a new environment variable `VCPKG` with a value of `C:\vcpkg`.
+- Add a new environment variable `VCPKG_INSTALLATION_ROOT` with a value of `C:\vcpkg`.
 
-You can verify whether the new variable `VCPKG` is set properly by typing the following command in Powershell:
+You can verify whether the new variable `VCPKG_INSTALLATION_ROOT` is set properly by typing the following command in Powershell:
 
 ```ps1
-$ENV:VCPKG
+$ENV:VCPKG_INSTALLATION_ROOT
 ```
 
 **Step 1.3:**
@@ -140,7 +140,7 @@ auditwheel repair -w dist --plat linux_x86_64 dist/gosdt-1.0.5-cp310-cp310-linux
 **Windows:**
 
 ```ps1
-python3 -m delvewheel repair --no-mangle-all --add-path "$ENV:VCPKG\installed\x64-windows\bin" dist/gosdt-1.0.5-cp310-cp310-win_amd64.whl -w dist
+python3 -m delvewheel repair --no-mangle-all --add-path "$ENV:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin" dist/gosdt-1.0.5-cp310-cp310-win_amd64.whl -w dist
 ```
 
 You will find the fixed wheel file in `dist`.
@@ -157,8 +157,8 @@ Please adjust the number of threads `--parallel 8` accordingly.
 # Create the build directory
 mkdir build
 
-# Generate all necessary files for the low-level build system (Makefile on *inx and MSBuild on Windows)
-cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ENV:VCPKG/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Debug 
+# Generate all necessary files for the low-level build system
+cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ENV:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Debug 
 
 # Compile the project from scratch with 8 threads
 cmake --build build --config Debug --clean-first --parallel 8
@@ -174,8 +174,8 @@ cmake --build build --config Debug --clean-first --parallel 8
 # Create the build directory
 mkdir build
 
-# Generate all necessary files for the low-level build system (Makefile on *inx and MSBuild on Windows)
-cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ENV:VCPKG/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
+# Generate all necessary files for the low-level build system
+cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ENV:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
 
 # Compile the project from scratch with 8 threads
 cmake --build build --config Release --clean-first --parallel 8
