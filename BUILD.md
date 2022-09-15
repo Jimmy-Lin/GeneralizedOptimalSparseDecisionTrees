@@ -31,38 +31,61 @@ sudo apt install -y patchelf # Required by auditwheel
 
 **Windows:**
 
-**Step 1.1:** 
+**Please make sure that you launch the Powershell as Admin.**
 
-Please make sure that you launch the Powershell as Admin.
+**Step 1.1:** Install Chocolatey
+
+In addition to Windows Package Manager (a.k.a. `winget`), [Chocolatey](https://chocolatey.org/) is used to install tools that are not yet provided by `winget`.  
+Please follow this [guide](https://chocolatey.org/install#individual) or use the following commands to install Chocolatey.
 
 ```ps1
-winget install Kitware.CMake
-Invoke-WebRequest -Uri "https://github.com/ninja-build/ninja/releases/latest/download/ninja-win.zip" -OutFile "C:\ninja-win.zip"
-Expand-Archive "C:\ninja-win.zip" -DestinationPath "C:\Windows\"
-New-Item -Path "C:\Windows\ninja-build.exe" -ItemType SymbolicLink -Value "C:\Windows\ninja.exe"
-Remove-Item C:\ninja-win.zip
-pip3 install --upgrade scikit-build
-pip3 install --upgrade delvewheel
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 ```
 
-**Step 1.2:**
+**Step 1.2:** Install vcpkg
 
-Additionally, please follow the [guide](https://vcpkg.io/en/getting-started.html) to install the C++ package manager `vcpkg` on Windows.  
+GOSDT requires the C++ package manager `vcpkg` to install all necessary C and C++ libraries on Windows.  
+Please follow this [guide](https://vcpkg.io/en/getting-started.html) or use the following commands to install `vcpkg` to `C:\vcpkg`.  
+
+```ps1
+cd C:\
+git clone https://github.com/Microsoft/vcpkg.git
+.\vcpkg\bootstrap-vcpkg.bat
+```
+
 Once you have installed `vcpkg`, for example, to `C:\vcpkg`, you need to...
 - Update your `PATH` variable to include `C:\vcpkg`.
 - Add a new environment variable `VCPKG_INSTALLATION_ROOT` with a value of `C:\vcpkg`.
 
-You can verify whether the new variable `VCPKG_INSTALLATION_ROOT` is set properly by typing the following command in Powershell:
+The following Powershell script modifies the system environment permanently.
+In other words, all users can see these two new variables.
+
+```ps1
+$vcpkg = "C:\vcpkg"
+$old = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
+$new = "$old;$vcpkg"
+Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $new
+Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name VCPKG_INSTALLATION_ROOT -Value $vcpkg
+```
+
+You can verify whether the new variable `VCPKG_INSTALLATION_ROOT` is set properly by typing the following command in Powershell:  
+Note that you may need to restart your terminal or reboot your computer to apply the changes.
 
 ```ps1
 $ENV:VCPKG_INSTALLATION_ROOT
 ```
 
-**Step 1.3:**
+**Step 1.3:** Install required development tools
 
-GMP does not come with a CMake module file, so `pkgconfig` is needed to find the GMP library on Windows, Ubuntu and macOS.  
-Please follow the guide on [StackOverflow](https://stackoverflow.com/a/22363820).  
-In short, download all those three zip files, extract them to, for example, `C:\pkgconfig`, and update the PATH variable on Windows.
+```ps1
+winget install Kitware.CMake
+choco install -y ninja
+choco install -y pkgconfiglite
+pip3 install --upgrade scikit-build
+pip3 install --upgrade delvewheel
+```
 
 ### Step 2: Install required 3rd-party libraries
 
@@ -148,7 +171,7 @@ You will find the fixed wheel file in `dist`.
 #### Method 3:
 
 If you build the project on Ubuntu or macOS, you need to remove the `-DCMAKE_TOOLCHAIN_FILE=...` option.  
-If you build the project on Windows, you must run the following commands in a **Developer Powershell for Visual Studio**.  
+If you build the project on Windows, you must run the following commands in a **Developer Powershell for Visual Studio 2019/2022**.  
 Please adjust the number of threads `--parallel 8` accordingly.
 
 **Debug Build:**
@@ -157,7 +180,7 @@ Please adjust the number of threads `--parallel 8` accordingly.
 # Create the build directory
 mkdir build
 
-# Generate all necessary files for the low-level build system
+# Generate all necessary files for the Ninja build system
 cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ENV:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Debug 
 
 # Compile the project from scratch with 8 threads
@@ -174,7 +197,7 @@ cmake --build build --config Debug --clean-first --parallel 8
 # Create the build directory
 mkdir build
 
-# Generate all necessary files for the low-level build system
+# Generate all necessary files for the Ninja build system
 cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ENV:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
 
 # Compile the project from scratch with 8 threads
@@ -227,6 +250,14 @@ exit
 
 You can find the manylinux wheel in `dist`.
 
+### Step 5: Run the experiment with the example dataset 
+
+Install the wheel file in `dist` and all required Python packages.  
+You may then execute the script `gosdt/example.py` to run the experiment with the example dataset.  
+Please adjust the name of your wheel file accordingly.
+
 ```bash
+pip3 install dist/gosdt-1.0.5-cp310-cp310-macosx_12_0_x86_64.whl
 pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+python3 gosdt/example.py
 ```
