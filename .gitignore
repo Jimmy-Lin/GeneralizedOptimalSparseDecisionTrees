@@ -36,3 +36,4 @@ _skbuild/
 dist/
 wheelhouse/
 *.egg-info/
+/gosdt.xcodeproj/xcuserdata/
