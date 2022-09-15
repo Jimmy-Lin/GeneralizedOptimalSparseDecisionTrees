@@ -60,7 +60,7 @@ jobs:
                   choco install -y pkgconfiglite
             # Install required development tools: scikit-build
             - name: Install required development tools - scikit-build
-              if: !startsWith(matrix.config.name, 'CentOS')
+              if: ${{ !startsWith(matrix.config.name, 'CentOS') }}
               run: |
                   pip3 install --upgrade scikit-build
             # Install required development tools: Wheel Fixer
@@ -95,7 +95,7 @@ jobs:
                   vcpkg install gmp:x64-windows
             # Build the project (Ubuntu, macOS and Windows)
             - name: Build the project
-              if: !startsWith(matrix.config.name, 'CentOS')
+              if: ${{ !startsWith(matrix.config.name, 'CentOS') }}
               run: |
                   python3 build.py
             # Build the project (CentOS 7 docker to generate manylinux wheel)
