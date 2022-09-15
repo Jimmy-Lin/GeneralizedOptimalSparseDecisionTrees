@@ -4,6 +4,15 @@ name: GOSDT CI
 # Allow to run this workflow manually from the Actions tab
 on: [push, pull_request, workflow_dispatch]
 
+#
+# >> Linux and macOS Builds:
+# Use Python 3.7 ABI3 on Linux and macOS to generate a wheel file that can be used by Python 3.7+.
+#
+# >> Windows Builds:
+# The dynamic library in the wheel file depends on a specific version of the Python runtime library.
+# e.g., `libgosdt.pyd` in a Python 3.7 wheel requires python37.dll, while that in a Python 3.10 wheel requires python310.dll.
+# As such, the CI pipeline generates a wheel for each supported Python version.
+#
 jobs:
     build:
         name: ${{ matrix.config.name }}
@@ -15,31 +24,57 @@ jobs:
                     - {
                         name: "Ubuntu 22.04 x86-64",
                         os: ubuntu-22.04,
+                        python-major-version: 3,
+                        python-minor-version: 7,
                     }
                     - {
                         name: "CentOS 7 x86-64",
                         os: ubuntu-22.04,
+                        python-major-version: 3,
+                        python-minor-version: 7,
                     }
                     - {
                         name: "macOS Monterey x86-64",
                         os: macos-12,
+                        python-major-version: 3,
+                        python-minor-version: 7,
                     }
                     - {
                         name: "Windows Server 2022 x86-64",
                         os: windows-2022,
+                        python-major-version: 3,
+                        python-minor-version: 7,
+                    }
+                    - {
+                        name: "Windows Server 2022 x86-64",
+                        os: windows-2022,
+                        python-major-version: 3,
+                        python-minor-version: 8,
+                    }
+                    - {
+                        name: "Windows Server 2022 x86-64",
+                        os: windows-2022,
+                        python-major-version: 3,
+                        python-minor-version: 9,
+                    }
+                    - {
+                        name: "Windows Server 2022 x86-64",
+                        os: windows-2022,
+                        python-major-version: 3,
+                        python-minor-version: 10,
                     }
         steps:
             # Checkout the repo
             - name: Checkout the repo
               uses: actions/checkout@v3
-            # Install required development tools: Python 3.7
-            - name: Install required development tools - Python 3.7
+            # Install required development tools: Python 3.7+
+            - name: Install required development tools - Python ${{ matrix.config.python-major-version }}.${{ matrix.config.python-minor-version }}
               uses: actions/setup-python@v4
               with:
-                  python-version: '3.7'
+                  python-version: '${{ matrix.config.python-major-version }}.${{ matrix.config.python-minor-version }}'
             - name: Verify the Python version
               run: |
-                  python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 7))"
+                  python3 -c "import sys; exit(not (sys.version_info.major == ${{ matrix.config.python-major-version }} and sys.version_info.minor == ${{ matrix.config.python-minor-version }}))"
             # Install required development tools: Ninja
             - name: Install required development tools - Ninja (Ubuntu)
               if: startsWith(matrix.config.name, 'Ubuntu')
@@ -124,44 +159,52 @@ jobs:
                       cd /source
                       python3.7 build.py
             # Python 3.7: Run the sample experiment
+            # Windows Builds: Run if and only if the wheel is built by Python 3.7.
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.7 - Step 1)
               uses: actions/setup-python@v4
               with:
                   python-version: '3.7'
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.7 - Step 2)
+              if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 7) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 7))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.8: Run the sample experiment
+            # Windows Builds: Run if and only if the wheel is built by Python 3.8.
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.8 - Step 1)
               uses: actions/setup-python@v4
               with:
                   python-version: '3.8'
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.8 - Step 2)
+              if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 8) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 8))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.9: Run the sample experiment
+            # Windows Builds: Run if and only if the wheel is built by Python 3.9.
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.9 - Step 1)
               uses: actions/setup-python@v4
               with:
                   python-version: '3.9'
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.9 - Step 2)
+              if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 9) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 9))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.10: Run the sample experiment
+            # Windows Builds: Run if and only if the wheel is built by Python 3.10.
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.10 - Step 1)
               uses: actions/setup-python@v4
               with:
                   python-version: '3.10'
             - name: Install the GOSDT Python module and run the sample experiment (Python 3.10 - Step 2)
+              if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 10) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 10))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
