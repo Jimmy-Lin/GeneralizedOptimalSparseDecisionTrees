@@ -124,38 +124,45 @@ jobs:
                       cd /source
                       python3.7 build.py
             # Python 3.7: Run the sample experiment
-            - name: Install the GOSDT Python module and run the sample experiment (Python 3.7)
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.7 - Step 1)
+              uses: actions/setup-python@v4
+              with:
+                  python-version: '3.7'
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.7 - Step 2)
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 7))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.8: Run the sample experiment
-            - name: Install the GOSDT Python module and run the sample experiment (Python 3.8)
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.8 - Step 1)
               uses: actions/setup-python@v4
               with:
                   python-version: '3.8'
-            - run: |
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.8 - Step 2)
+              run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 8))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.9: Run the sample experiment
-            - name: Install the GOSDT Python module and run the sample experiment (Python 3.9)
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.9 - Step 1)
               uses: actions/setup-python@v4
               with:
                   python-version: '3.9'
-            - run: |
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.9 - Step 2)
+              run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 9))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.10: Run the sample experiment
-            - name: Install the GOSDT Python module and run the sample experiment (Python 3.10)
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.10 - Step 1)
               uses: actions/setup-python@v4
               with:
                   python-version: '3.10'
-            - run: |
+            - name: Install the GOSDT Python module and run the sample experiment (Python 3.10 - Step 2)
+              run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 10))"
                   pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
