@@ -136,10 +136,10 @@ Please adjust the number of threads `-j8` accordingly.
 
 ```bash
 # Debug Build
-python3 setup.py bdist_wheel --build-type=Debug -G Ninja -- -- -j8
+python3 setup.py bdist_wheel --py-limited-api=cp37 --build-type=Debug -G Ninja -- -- -j8
 
 # Release Build
-python3 setup.py bdist_wheel --build-type=Release -G Ninja -- -- -j8
+python3 setup.py bdist_wheel --py-limited-api=cp37 --build-type=Release -G Ninja -- -- -j8
 ```
 
 You can find the command line tools in `_skbuild/<platform-specific>/cmake-build/` and the wheel file in `dist/`.

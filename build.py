@@ -82,7 +82,9 @@ if __name__ == '__main__':
         setup(["clean"])
 
         print(">> Rebuilding the project from scratch...")
-        setup(["bdist_wheel", "--build-type=Release", "-G", "Ninja", "--", "--", "-j{}".format(os.cpu_count())])
+        # `--py-limited-api=cp37` is needed otherwise installing the wheel file produced by the CentOS 7 docker
+        # on other Linux distributions, such as Ubuntu, leads to an error `Not a supported wheel on this platform`.
+        setup(["bdist_wheel", "--py-limited-api=cp37", "--build-type=Release", "-G", "Ninja", "--", "--", "-j{}".format(os.cpu_count())])
 
         print(">> Adding required dynamic libraries to the wheel file...")
         wheels = os.listdir("dist")
