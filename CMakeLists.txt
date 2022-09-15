@@ -93,6 +93,10 @@ if (SKBUILD)
     target_link_libraries(${TARGET_PYTHON} TBB::tbb TBB::tbbmalloc PkgConfig::GMP Threads::Threads)
     # Set up the Python extension
     find_package(PythonExtensions REQUIRED)
+    # Use the suffix `.abi3.so` so that Python 3 on other platforms can find the dylib and import it properly
+    message(STATUS "The current Python extension suffix is \"${PYTHON_EXTENSION_MODULE_SUFFIX}\".")
+    set(PYTHON_EXTENSION_MODULE_SUFFIX ".abi3.so")
+    message(STATUS "The new Python extension suffix is \"${PYTHON_EXTENSION_MODULE_SUFFIX}\".")
     python_extension_module(${TARGET_PYTHON})
     # Install `libgosdt` to the root directory of the Python extension package
     install(TARGETS ${TARGET_PYTHON} LIBRARY DESTINATION .)
