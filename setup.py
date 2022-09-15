@@ -25,5 +25,5 @@ setup(
     packages=find_packages(where='.'),
     cmake_install_dir="gosdt",
     cmake_args=cmake_args,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
 )
