@@ -1,3 +1,0 @@
-[Back](/README.md)
-
-# License

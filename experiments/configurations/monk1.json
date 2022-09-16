@@ -1,6 +1,6 @@
 {
-    "regularization": 0.01,
-    "depth_budget": 4,
+    "regularization": 0.02,
+    "depth_budget": 6,
     "time_limit": 60,
     "verbose": true,
     "similar_support": false

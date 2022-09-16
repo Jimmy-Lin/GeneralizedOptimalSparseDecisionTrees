@@ -1,5 +1,11 @@
 # Fast Sparse Decision Tree Optimization via Reference Ensembles
 
+This code creates optimized sparse decision trees. It is a direct competitor of CART[[3](#related-work)] and C4.5 [[6](#related-work)], as well as DL8.5[[1](#related-work)], BinOct[[7](#related-work)], and OSDT[[4](#related-work)]. Its advantage over CART and C4.5 is that the trees are globally optimized, not constructed just from the top down. This makes it slower than CART, but it provides better solutions. On the other hand, it tends to be faster than other optimal decision tree methods because it uses bounds to limit the search space, and uses a black box model (a boosted decision tree) to “guess” information about the optimal tree. It takes only seconds or a few minutes on most datasets.
+
+To make it run faster, please use the options to limit the depth of the tree, and increase the regularization parameter above 0.02. If you run the algorithm without a depth constraint or set the regularization too small, it will run more slowly.
+
+This work builds on a number of innovations for scalable construction of optimal tree-based classifiers: Scalable Bayesian Rule Lists[[8](#related-work)], CORELS[[2](#related-work)], OSDT[[4](#related-work)], and, most closely, GOSDT[[5](#related-work)]. 
+
 # Table of Content
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -468,7 +474,7 @@ Describes how to install and use the library with details on project structure.
 
 # FAQs
 
-If you run into any issues when running GOSDT, consult the [**FAQs**](https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees/blob/master/doc/faqs.md) first. 
+If you run into any issues when running GOSDT, consult the [**FAQs**](/doc/faqs.md) first. 
 
 ---
 
@@ -478,3 +484,22 @@ This software is licensed under a 3-clause BSD license (see the LICENSE file for
 
 ---
 
+## Related Work
+[1] Aglin, G.; Nijssen, S.; and Schaus, P. 2020. Learning optimal decision trees using caching branch-and-bound search. In _AAAI Conference on Artificial Intelligence_, volume 34, 3146–3153.
+
+[2] Angelino, E.; Larus-Stone, N.; Alabi, D.; Seltzer, M.; and Rudin, C. 2018. Learning Certifiably Optimal Rule Lists for Categorical Data. _Journal of Machine Learning Research_, 18(234): 1–78.
+
+[3] Breiman, L.; Friedman, J.; Stone, C. J.; and Olshen, R. A. 1984. _Classification and Regression Trees_. CRC press.
+
+[4] Hu, X.; Rudin, C.; and Seltzer, M. 2019. Optimal sparse decision trees. In _Advances in Neural Information Processing Systems_, 7267–7275.
+
+[5] Lin, J.; Zhong, C.; Hu, D.; Rudin, C.; and Seltzer, M. 2020. Generalized and scalable optimal sparse decision trees. In _International Conference on Machine Learning (ICML)_, 6150–6160.
+
+[6] Quinlan, J. R. 1993. C4.5: _Programs for Machine Learning_. Morgan Kaufmann
+
+[7] Verwer, S.; and Zhang, Y. 2019. Learning optimal classification trees using a binary linear program formulation. In _AAAI
+Conference on Artificial Intelligence_, volume 33, 1625–1632.
+
+[8] Yang, H., Rudin, C., & Seltzer, M. (2017, July). Scalable Bayesian rule lists. In _International Conference on Machine Learning (ICML)_ (pp. 3921-3930). PMLR.
+
+---

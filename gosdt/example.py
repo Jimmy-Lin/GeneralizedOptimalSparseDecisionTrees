@@ -7,7 +7,7 @@ from model.threshold_guess import compute_thresholds
 from gosdt import GOSDT
 
 # read the dataset
-df = pd.read_csv("experiments/datasets/fico.csv", sep=";")
+df = pd.read_csv("experiments/datasets/fico.csv")
 X, y = df.iloc[:,:-1].values, df.iloc[:,-1].values
 h = df.columns[:-1]
 
@@ -21,8 +21,6 @@ print("X:", X.shape)
 print("y:",y.shape)
 X_train, thresholds, header, threshold_guess_time = compute_thresholds(X, y, n_est, max_depth)
 y_train = pd.DataFrame(y)
-X_test = X_train
-y_test = y_train
 
 # guess lower bound
 start_time = time.perf_counter()
@@ -46,12 +44,11 @@ pd.DataFrame(warm_labels, columns=["class_labels"]).to_csv(labelpath, header="cl
 # train GOSDT model
 config = {
             "regularization": 0.001,
-            "similar_support": False,
-            "strong_indifference": False,
-            "time_limit": 1800,
             "depth_budget": 5,
+            "time_limit": 60,
             "warm_LB": True,
-            "path_to_labels": labelpath
+            "path_to_labels": labelpath,
+            "similar_support": False,
         }
 
 model = GOSDT(config)
@@ -62,7 +59,6 @@ print("evaluate the model, extracting tree and scores", flush=True)
 
 # get the results
 train_acc = model.score(X_train, y_train)
-test_acc = model.score(X_test, y_test)
 n_leaves = model.leaves()
 n_nodes = model.nodes()
 time = model.utime
