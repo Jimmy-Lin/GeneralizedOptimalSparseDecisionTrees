@@ -132,6 +132,8 @@ python3 build.py
 
 **Step 3.1:** Build the C++ library and the Python wheel
 
+Please adjust the API version to your Python version accordingly.  
+For example, if you are using Python 3.9, set the version to be `--py-limited-api=cp39`.  
 Please adjust the number of threads `-j8` accordingly.
 
 ```bash
