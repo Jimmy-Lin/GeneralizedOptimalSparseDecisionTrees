@@ -40,25 +40,25 @@ jobs:
                         python-minor-version: 7,
                     }
                     - {
-                        name: "Windows Server 2022 x86-64",
+                        name: "Windows Server 2022 x86-64 (Python 3.7)",
                         os: windows-2022,
                         python-major-version: 3,
                         python-minor-version: 7,
                     }
                     - {
-                        name: "Windows Server 2022 x86-64",
+                        name: "Windows Server 2022 x86-64 (Python 3.8)",
                         os: windows-2022,
                         python-major-version: 3,
                         python-minor-version: 8,
                     }
                     - {
-                        name: "Windows Server 2022 x86-64",
+                        name: "Windows Server 2022 x86-64 (Python 3.9)",
                         os: windows-2022,
                         python-major-version: 3,
                         python-minor-version: 9,
                     }
                     - {
-                        name: "Windows Server 2022 x86-64",
+                        name: "Windows Server 2022 x86-64 (Python 3.10)",
                         os: windows-2022,
                         python-major-version: 3,
                         python-minor-version: 10,
