@@ -11,10 +11,6 @@
 #include <tbb/scalable_allocator.h>
 //#include <simdpp/simd.h>
 
-#ifdef INCLUDE_OPENCL
-#include <opencl/cl.hpp>
-#endif
-
 #include "integrity_violation.hpp"
 #include "bitmask.hpp"
 
@@ -50,13 +46,8 @@ private:
     // Number of floating points represented in the source vector
     unsigned int size;
     unsigned int width;
-    // Threshold of queries beyond which a parallel sum is executed
-    unsigned int parallel_threshold;
     // Number of blocks expected in bitmask
     unsigned int num_blocks;
-
-    // Initialize the OpenCL implementation to perform our sum in parallel
-    void initialize_kernel(void);
 
     // @param indicator: array of blocks of bits indicating which elements are relevant to the vector sum
     // @returns the total of all elements associated to bits that were set to 1
@@ -69,28 +60,8 @@ private:
     // @note: This implementation computes run-length-code for fast sums
     void bit_sequential_sum(Bitmask const &indicator, float *accumulator) const;
 
-    // @param indicator: array of blocks of bits indicating which elements are relevant to the vector sum
-    // @returns the total of all elements associated to bits that were set to 1
-    // @note this implementation uses OpenCL kernels to sum in parallel
-    void parallel_sum(bitblock * blocks, float * accumulator, bool blocking = true, bool profile = false) const;
-
     // @param source: The original vector of floats used in computation
     // @modifies prefixes: writes the prefix sums into this vector
     void build_prefixes(std::vector< std::vector< float > > const & source, std::vector< std::vector< float > > & prefixes);
-#ifdef INCLUDE_OPENCL
-    static cl::Device device;
-    static cl::Platform platform;
-    static cl::Context context;
-    static cl::Program program;
-    static cl::CommandQueue queue;
-    static unsigned int group_size;
-
-    cl::Buffer data_buffer;
-
-    void initialize_driver(void);
-
-    void set_platform(int index = 0);
-    void set_device(cl::Platform platform, int index, bool display = false);
-#endif
 };
 #endif
