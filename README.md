@@ -8,9 +8,10 @@ This work builds on a number of innovations for scalable construction of optimal
 
 # Table of Content
 - [Installation](#installation)
+- [Compilation](#compilation)
 - [Configuration](#configuration)
 - [Example](#example)
-- [Repository Structure](#repository_structure)
+- [Repository Structure](#structure)
 - [License](#license)
 - [FAQs](#faqs)
 
@@ -18,73 +19,22 @@ This work builds on a number of innovations for scalable construction of optimal
 
 # Installation
 
-<!--Guide for end-users who want to use the library without modification.
+You may use the following commands to install GOSDT along with its dependencies on macOS, Ubuntu and Windows.  
+You need **Python 3.7 or later** to use the module `gosdt` in your project.
 
-Describes how to install and use the library as a stand-alone command-line program or as an embedded extension in a larger project.
-Currently supported as a Python extension.
--->
-### Installing GOSDT Dependencies
-
-List of external dependencies
-
-The following dependencies need to be installed to build the program. 
- - [**Boost**](https://www.boost.org/) - Collection of portable C++ source libraries
- - [**GMP**](http://gmplib.org/) - Collection of functions for high-precision artihmetics
- - [**Intel TBB**](https://www.threadingbuildingblocks.org/) - Rich and complete approach to parallelism in C++. 
-   REQUIRES VERSION 2020_U3 OR EARLIER.
-
-You can execute the following command to install all dependencies on Mac or Ubuntu (**apt** and **brew** distros):
-
+```bash
+pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+pip3 install gosdt
 ```
-$ bash dependencies.sh 
-``` 
 
-**Bundled Dependencies**
+You can find a list of available wheels on [PyPI]((https://pypi.org/project/gosdt/)).  
+Please feel free to open an issue if you do not see your distribution offered.
 
-The following dependencies are included as part of the repository, thus requiring no additional installation.
- - [**nlohmann/json**](https://github.com/nlohmann/json) - JSON Parser
- - [**ben-strasser/fast-cpp-csv-parser**](https://github.com/ben-strasser/fast-cpp-csv-parser) - CSV Parser
- - [**OpenCL C++ Bindings 1.2**](https://www.khronos.org/registry/OpenCL/specs/opencl-cplusplus-1.2.pdf) - OpenCL bindings for GPU computing
+---
 
- **Installation -- Python**
- 
-For installation of the python library, we *strongly* recommend using pip and the wheels on PyPI 
-[here](https://pypi.org/project/gosdt/).
-```
-pip install gosdt
-```
-If you do not see your distribution offered, please open an issue on the 
-github repository or email the author of the PyPI releases. We do not currently support Windows, with plans to in 
-the future. Installing only the python library does NOT require installation of external dependencies, as those come 
-prebundled. 
+# Compilation
 
- **Installation -- CPP**
-
-For building the two cpp binaries, **gosdt_tests** and **gosdt_executable**, we build with scons.
-[Scons](https://scons.org/pages/download.html) can be installed in multiple ways, we recommend using pip
-```
-pip install scons
-```
-Then, please install the dependencies listed above. 
-Scons will check the standard locations for the dependencies:
-- /usr/include
-- /usr/lib
-- /usr/local/include
-- /usr/local/lib
-
-After the dependencies are installed, simply running
-```
-scons
-```
-or 
-```
-python -m SCons
-```
-in the gosdtGuesses home directory will create the binaries in the bin directory (the latter command if scons is not in 
-your path). We do not currently support Windows with plans to in the future. 
-
-For more details about GOSDT installation and examples of running **pure** GOSDT, please see https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees/blob/master/README.md for more details.
-
+Please refer to the [manual](doc/build.md) to build the C++ command line interface and the Python extension module and run the experiment with example datasets on your machine.
 
 ---
 
@@ -98,9 +48,8 @@ The configuration is a JSON object and has the following structure and default v
   "reference_LB": false, 
   "path_to_labels": "",
   "time_limit": 0,
-  
   "uncertainty_tolerance": 0.0,
-  "upperbound": 0.0
+  "upperbound": 0.0,
   "worker_limit": 1,
   "stack_limit": 0,
   "precision_limit": 0,
@@ -457,18 +406,22 @@ else if ExternalRiskEstimate<=67.5 != 1 and MSinceMostRecentInqexcl7days<=-7.5 !
 
 ---
 
-# Repository_Structure
-Guide for developers who want to use, modify and test the library.
+# Structure
 
-Describes how to install and use the library with details on project structure.
-
- - **experiments** - configurations, datasets, and models to run experiments
- - **doc** - documentation
- - **gosdt** - code relating to the Python implementation and wrappers around C++ implementation
- - **lib** - headers for external libraries
- - **log** - log files
- - **src** - source files
- - **test** - test files
+This repository contains the following directories and files:
+- **.github**: Configurations for GitHub action runners.
+- **doc**: Documentation
+- **experiments**: Datasets and their configurations to run experiments
+- **gosdt**: Jupyter notebook, Python implementation and wrappers around C++ implementation
+- **gosdt.xcodeproj**: Xcode project file for Mac users (Intel x86-64 and Apple Silicon)
+- **include**: Required 3rd-party header-only libraries
+- **log**: Log files
+- **src**: Source files for C++ implementation and Python binding
+- **test**: Source files for unit tests
+- **build.py**: Python script that builds the project automatically
+- **CMakeLists.txt**: Configuration file for the CMake build system
+- **pyproject.toml**: Configuration file for the SciKit build system
+- **setup.py**: Python script that builds the wheel file
 
 ---
 
