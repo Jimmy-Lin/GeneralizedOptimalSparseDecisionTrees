@@ -331,7 +331,7 @@ The configuration is a JSON object and has the following structure and default v
 ---
 # Example
 
-Example code to run GOSDT with threshold guessing, lower bound guessing, and depth limit. The example python file is avaialable in python/example.py
+Example code to run GOSDT with threshold guessing, lower bound guessing, and depth limit. The example python file is available in [gosdt/example.py](/gosdt/example.py). A tutorial ipython notebook is available in [gosdt/tutorial.ipynb](/gosdt/tutorial.ipynb).  
 
 ```
 import pandas as pd
@@ -343,7 +343,7 @@ from model.threshold_guess import compute_thresholds
 from model.gosdt import GOSDT
 
 # read the dataset
-df = pd.read_csv("experiments/datasets/fico.csv", sep=";")
+df = pd.read_csv("experiments/datasets/fico.csv")
 X, y = df.iloc[:,:-1].values, df.iloc[:,-1].values
 h = df.columns[:-1]
 
@@ -371,7 +371,7 @@ labelsdir = pathlib.Path('/tmp/warm_lb_labels')
 labelsdir.mkdir(exist_ok=True, parents=True)
 labelpath = labelsdir / 'warm_label.tmp'
 labelpath = str(labelpath)
-pd.DataFrame(warm_labels).to_csv(labelpath, header="class_labels",index=None) # TODO: verify this formats correctly for gosdt (shouldn't require headers)
+pd.DataFrame(warm_labels, columns=["class_labels"]).to_csv(labelpath, header="class_labels",index=None)
 
 
 # train GOSDT model
@@ -380,7 +380,7 @@ config = {
             "depth_budget": 5,
             "warm_LB": True,
             "path_to_labels": labelpath,
-            "time_limit": 1800,
+            "time_limit": 60,
             "similar_support": False
         }
 
