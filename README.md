@@ -27,7 +27,7 @@ pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 mat
 pip3 install gosdt
 ```
 
-You can find a list of available wheels on [PyPI]((https://pypi.org/project/gosdt/)).  
+You can find a list of available wheels on [PyPI](https://pypi.org/project/gosdt/).  
 Please feel free to open an issue if you do not see your distribution offered.
 
 ---
@@ -113,7 +113,7 @@ The configuration is a JSON object and has the following structure and default v
      1
      0
      ```
-- Default: Emptry string
+- Default: Empty string
 
 **time_limit**
  - Values: Decimal greater than or equal to 0
@@ -142,7 +142,7 @@ The configuration is a JSON object and has the following structure and default v
 
 **similar_support**
  - Values: true or false
- - Description: Enables the similar support bound imeplemented via the distance index
+ - Description: Enables the similar support bound implemented via the distance index
  - Default: true
 
 **feature_exchange**
@@ -245,37 +245,37 @@ The configuration is a JSON object and has the following structure and default v
      ```
    - Note: costs values are not normalized, so high cost values lower the relative weight of regularization
  - Special Case: When set to empty string, a default cost matrix is used which represents unweighted training misclassification.
- - Default: Emptry string
+ - Default: Empty string
 
 **model**
  - Values: string representing a path to a file.
  - Description: The output models will be written to this file.
  - Special Case: When set to empty string, no model will be stored.
- - Default: Emptry string
+ - Default: Empty string
 
 **profile**
  - Values: string representing a path to a file.
  - Description: Various analytics will be logged to this file.
  - Special Case: When set to empty string, no analytics will be stored.
- - Default: Emptry string
+ - Default: Empty string
 
 **timing**
  - Values: string representing a path to a file.
  - Description: The training time will be appended to this file.
  - Special Case: When set to empty string, no training time will be stored.
- - Default: Emptry string
+ - Default: Empty string
 
 **trace**
  - Values: string representing a path to a directory.
  - Description: snapshots used for trace visualization will be stored in this directory
  - Special Case: When set to empty string, no snapshots are stored.
- - Default: Emptry string
+ - Default: Empty string
 
 **tree**
  - Values: string representing a path to a directory.
  - Description: snapshots used for trace-tree visualization will be stored in this directory
  - Special Case: When set to empty string, no snapshots are stored.
- - Default: Emptry string
+ - Default: Empty string
 
 ---
 # Example
