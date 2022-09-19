@@ -18,7 +18,7 @@ print("Additional CMake Arguments = {}".format(cmake_args))
 
 setup(
     name="gosdt",
-    version="0.1.6",
+    version="0.1.7",
     description="Implementation of General Optimal Sparse Decision Tree",
     author="UBC Systopia Research Lab",
     url="https://github.com/ubc-systopia/gosdt-guesses",
