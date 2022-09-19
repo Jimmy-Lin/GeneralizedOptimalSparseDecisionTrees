@@ -8,10 +8,8 @@ This work builds on a number of innovations for scalable construction of optimal
 
 # Table of Content
 - [Installation](#installation)
-- [Compilation](#compilation)
 - [Configuration](#configuration)
 - [Example](#example)
-- [Repository Structure](#structure)
 - [License](#license)
 - [FAQs](#faqs)
 
