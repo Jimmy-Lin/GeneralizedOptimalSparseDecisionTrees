@@ -168,7 +168,7 @@ jobs:
               if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 7) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 7))"
-                  pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+                  pip3 install attrs packaging editables pandas scikit-learn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.8: Run the sample experiment
@@ -181,7 +181,7 @@ jobs:
               if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 8) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 8))"
-                  pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+                  pip3 install attrs packaging editables pandas scikit-learn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.9: Run the sample experiment
@@ -194,7 +194,7 @@ jobs:
               if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 9) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 9))"
-                  pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+                  pip3 install attrs packaging editables pandas scikit-learn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Python 3.10: Run the sample experiment
@@ -207,7 +207,7 @@ jobs:
               if: ${{ !startsWith(matrix.config.name, 'Windows') || (startsWith(matrix.config.name, 'Windows') && matrix.config.python-minor-version == 10) }}
               run: |
                   python3 -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor == 10))"
-                  pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+                  pip3 install attrs packaging editables pandas scikit-learn sortedcontainers gmpy2 matplotlib
                   python3 -c "import os; import subprocess; exit(subprocess.run(['pip3', 'install', 'dist/{}'.format(os.listdir('dist')[0])]).returncode)"
                   python3 gosdt/example.py
             # Upload the wheel file

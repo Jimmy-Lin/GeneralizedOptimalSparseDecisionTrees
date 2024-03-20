@@ -35,7 +35,7 @@ setup(
                       "packaging>=20.9",
                       "editables==0.2;python_version>'3.0'",
                       "pandas",
-                      "sklearn",
+                      "scikit-learn",
                       "sortedcontainers",
                       "gmpy2",
                       "matplotlib"]

@@ -262,6 +262,6 @@ Please adjust the name of your wheel file accordingly.
 
 ```bash
 pip3 install dist/gosdt-1.0.5-cp310-cp310-macosx_12_0_x86_64.whl
-pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+pip3 install attrs packaging editables pandas scikit-learn sortedcontainers gmpy2 matplotlib
 python3 gosdt/example.py
 ```

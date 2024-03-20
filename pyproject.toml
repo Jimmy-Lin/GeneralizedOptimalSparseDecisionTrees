@@ -9,7 +9,7 @@ requires = [
     "packaging>=20.9",
     "editables==0.2",
     "pandas",
-    "sklearn",
+    "scikit-learn",
     "sortedcontainers",
     "gmpy2",
     "matplotlib"

@@ -1,22 +1,12 @@
 import numpy as np
-import pandas as pd
-import json
 import time
-import random
-import sys
-import os  
-from queue import Queue
-import pathlib
 
-from math import ceil
-from sklearn.model_selection import KFold, cross_val_score, train_test_split
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn import metrics
 
 
 # fit the tree using gradient boosted classifier
 def fit_boosted_tree(X, y, n_est=10, lr=0.1, d=1):
-    clf = GradientBoostingClassifier(loss='deviance', learning_rate=lr, n_estimators=n_est, max_depth=d,
+    clf = GradientBoostingClassifier(loss='log_loss', learning_rate=lr, n_estimators=n_est, max_depth=d,
                                     random_state=42)
     clf.fit(X, y)
     out = clf.score(X, y)

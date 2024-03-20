@@ -23,7 +23,7 @@ You may use the following commands to install GOSDT along with its dependencies 
 You need **Python 3.7 or later** to use the module `gosdt` in your project.
 
 ```bash
-pip3 install attrs packaging editables pandas sklearn sortedcontainers gmpy2 matplotlib
+pip3 install attrs packaging editables pandas scikit-learn sortedcontainers gmpy2 matplotlib
 pip3 install gosdt
 ```
 
